@@ -1,11 +1,9 @@
 #ifndef MENU_H
 #define MENU_H
+
 #include "logic.h"
 
-void printMenu();
-int menu(vector<Figure*>* figures);
-
-enum Menu {
+enum MenuChoices {
     ADD = 1,
     ALL_PARAMS,
     ALL_AREA,
@@ -16,6 +14,16 @@ enum Menu {
     EXIT,
 };
 
+class Menu {
+private:
+    vector<Figure*> figures;
 
+    int validOption(int *option);
+    void printMenu();
+    bool correctFigure(int figure);
+
+public:
+    int run(vector<Figure*>* figures);
+};
 
 #endif //MENU_H

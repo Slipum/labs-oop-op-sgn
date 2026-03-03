@@ -1,8 +1,18 @@
 #include "menu.h"
-#include <cstdio>
+#include "validEnd.h"
+#include "choices.h"
+#include "stdfree.h"
 
-int validOption(int *option) {
-    if (scanf("%d", option) != 1) {
+int Menu::validOption(int* option) {
+    if (cin.peek() == EOF || cin.eof()) {
+        cout << endl;
+        cout << "Некорректный ввод." << endl;
+        *option = EXIT;
+        freeInput();
+        return 0;
+    }
+    cin >> *option;
+    if (cin.fail() || !validEnd(cin.peek())) {
         cout << "Пожалуйста введите цифру." << endl;
         freeInput();
         return 1;
@@ -10,7 +20,7 @@ int validOption(int *option) {
     return 0;
 }
 
-void printMenu() {
+void Menu::printMenu() {
     cout << "+=================== МЕНЮ ===================+" << endl;
     cout << "| 1. Добавить фигуру                         |" << endl; // ADD
     cout << "| 2. Вывести все фигуры с параметрами        |" << endl; // ALL_PARAMS
@@ -24,50 +34,54 @@ void printMenu() {
     cout << ">> ";
 }
 
-bool correctFigure(int figure) {
+bool Menu::correctFigure(int figure) {
     int i = 0;
     switch (figure) {
-        case CIRCLE: i++;
-        case RECTANGLE: i++;
-        case TRIANGLE: i++;
-        case POLYGON: i++;
+    case CIRCLE: i++;
+    case RECTANGLE: i++;
+    case TRIANGLE: i++;
+    case POLYGON: i++;
     }
 
     return i != 0;
 }
 
-int menu(vector<Figure*>* figures) {
+int Menu::run(vector<Figure*>* figures) {
     int option;
-    printMenu();
-    if (validOption(&option)) return 1;
+    this->printMenu();
+    if (this->validOption(&option)) {
+        return 1;
+    }
     freeInput();
+
+    Choices choice;
     switch (option) {
-        case ADD:
-            while (!correctFigure(addFigure(figures))) {}
-            break;
-        case ALL_PARAMS:
-            printAllParams(*figures);
-            break;
-        case ALL_AREA:
-            printAllAreas(*figures);
-            break;
-        case SUM_AREAS:
-            sumAreas(*figures);
-            break;
-        case SORT:
-            sortByArea(figures);
-            break;
-        case DEL_NUM:
-            deletePerNum(figures);
-            break;
-        case DEL_AREA:
-            deletePerArea(figures);
-            break;
-        case EXIT:
-            break;
-        default:
-            cout << "Некорректный пункт. Попробуйте другой из предложенных: " << endl;
-            break;
+    case ADD:
+        while (!this->correctFigure(choice.addFigure(figures))) {}
+        break;
+    case ALL_PARAMS:
+        choice.printAllParams(*figures);
+        break;
+    case ALL_AREA:
+        choice.printAllAreas(*figures);
+        break;
+    case SUM_AREAS:
+        choice.sumAreas(*figures);
+        break;
+    case SORT:
+        choice.sortByArea(figures);
+        break;
+    case DEL_NUM:
+        choice.deletePerNum(figures);
+        break;
+    case DEL_AREA:
+        choice.deletePerArea(figures);
+        break;
+    case EXIT:
+        break;
+    default:
+        cout << "Некорректный пункт. Попробуйте другой из предложенных: " << endl;
+        break;
     }
     return option;
 }

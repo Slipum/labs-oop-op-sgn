@@ -31,8 +31,10 @@ void test(vector<Figure*>* figures) {
 }
 
 int main() {
+    Menu menu;
     vector<Figure*> figures;
     // test(&figures);
-    while (menu(&figures) != EXIT) {}
+    system("clear");
+    while (menu.run(&figures) != EXIT) {}
     return 0;
 }

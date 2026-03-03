@@ -1,266 +1,128 @@
-#include "menu.h"
-#include <iostream>
+#include "logic.h"
+#include "stdfree.h"
 
-void printFigureTypes() {
-    cout << "1. Круг" << endl;
-    cout << "2. Прямоугольник" << endl;
-    cout << "3. Треугольник" << endl;
-    cout << "4. Выпуклый многоугольник" << endl;
-}
-
-int addFigure(vector<Figure*>* figures) {
-    int typeFigure;
-    printFigureTypes();
-    cout << "Введите тип фигуры: ";
-    cin >> typeFigure;
-    freeInput();
-    switch (typeFigure) {
-        case CIRCLE: {
-            addCircle(figures);
-            break;
-        }
-        case RECTANGLE: {
-            addRectangle(figures);
-            break;
-        }
-        case TRIANGLE: {
-            addTriangle(figures);
-            break;
-        }
-        case POLYGON: {
-            addPolygon(figures);
-            break;
-        }
-        default: {
-            cout << "Некорректный пункт. Попробуйте другой из предложенных:" << endl;
-            break;
-        }
+bool Figure::setName(string a) {
+    if (a == "") {
+        cout << "Имя не может быть пустое. Попробуйте заполнить имя." << endl;
+        return false;
     }
-    return typeFigure;
+    if (a[0] == ' ') {
+        cout << "Строка начинается с пробела. Попробуйте заполнить корректное имя" << endl;
+        return false;
+    }
+    name = a;
+    return true;
 }
 
-void setNameFigure(Figure* f) {
-    string name;
-    do {
-        cout << "Введите имя: ";
-        getline(cin, name, '\n');
-    } while (!f->setName(name));
-}
-
-void addRectangle(vector<Figure*>* figures) {
-    Rectangle* f = new Rectangle();
-    setNameFigure(f);
-
-    coord l;
-    do {
-        cout << "Введите координаты левого верхнего угла: ";
-        cin >> l.x;
-        cin >> l.y;
-        if (cin.fail()) {
-            cout << "Введите обе координаты левого верхнего угла." << endl;
-            freeInput();
-            continue;
-        }
-    } while (!f->setLeftCorner(l.x, l.y, cin.fail()));
-
-    coord r;
-    do {
-        cout << "Введите координаты правого нижнего угла: ";
-        cin >> r.x;
-        cin >> r.y;
-        if (cin.fail()) {
-            cout << "Введите обе координаты правого нижнего угла." << endl;
-            freeInput();
-            continue;
-        }
-    } while (!f->setRightCorner(r.x, r.y, cin.fail()));
-    figures->push_back(f);
-}
-
-void setTriangleCorner(Triangle* f, string corner) {
-    coord c;
-    bool success;
-    do {
-        cout << "Введите координаты " << corner << " угла: ";
-        cin >> c.x;
-        cin >> c.y;
-        if (cin.fail()) {
-            cout << "Введите обе координаты " << corner << " угла." << endl;
-            freeInput();
-            continue;
-        }
-
-        if (corner == "первого") {
-            success = f->setA(c.x, c.y, cin.fail());
-        } else if (corner == "второго") {
-            success = f->setB(c.x, c.y, cin.fail());
-        } else {
-            success = f->setC(c.x, c.y, cin.fail());
-        }
-    } while (!success);
-}
-
-void setPolygonCorner(vector<coord>* corners, string corner) {
-    coord c;
-
-    cout << "Введите координаты " << corner << " угла: ";
-    cin >> c.x;
-    cin >> c.y;
-    while (cin.fail()) {
-        cout << "Введите обе координаты " << corner << " угла." << endl;
+bool Circle::setCenter(float x, float y, bool incorrectInput) {
+    if (incorrectInput) {
+        cout << "Введите обе координаты центра." << endl;
         freeInput();
-        cout << "Введите координаты " << corner << " угла: ";
-        cin >> c.x;
-        cin >> c.y;
-    };
-    corners->push_back(c);
+        return false;
+    }
+    center[0] = x;
+    center[1] = y;
+    return true;
 }
 
-void addTriangle(vector<Figure*>* figures) {
-    Triangle* f = new Triangle();
-    setNameFigure(f);
-
-    setTriangleCorner(f, "первого");
-    setTriangleCorner(f, "второго");
-    setTriangleCorner(f, "третьего");
-
-    figures->push_back(f);
-}
-
-void addPolygon(vector<Figure*>* figures) {
-    Polygon* f = new Polygon();
-    setNameFigure(f);
-
-    int corns;
-    cout << "Введите количество вершин: ";
-    cin >> corns;
-    while (cin.fail() || corns <= 0) {
-        cout << "Некоректное количество вершин." << endl;
-        cout << "Введите количество вершин: ";
+bool Circle::setRadius(float r) {
+    if (r <= 0) {
+        cout << "Введите коректное значение радиуса." << endl;
         freeInput();
-        cin >> corns;
+        return false;
     }
-
-    vector<coord> corners;
-    for (int i = 1; i < corns+1; i++) {
-        setPolygonCorner(&corners, (to_string(i) + "-ого"));
-    }
-    f->setCorners(corners);
-
-    figures->push_back(f);
+    radius = r;
+    return true;
 }
 
-void addCircle(vector<Figure*>* figures) {
-    Circle* f = new Circle();
-    setNameFigure(f);
-
-    coord c;
-    do {
-        cout << "Введите координаты центра: ";
-        cin >> c.x;
-        cin >> c.y;
-        if (cin.fail()) {
-            cout << "Введите обе координаты центра." << endl;
-            freeInput();
-            continue;
-        }
-    } while (!f->setCenter(c.x, c.y, cin.fail()));
-
-    float r;
-    do {
-        cout << "Введите радиус: ";
-        cin >> r;
-    } while (!f->setRadius(r));
-    figures->push_back(f);
+bool Rectangle::setLeftCorner(float x, float y, bool incorrectInput) {
+    if (incorrectInput) {
+        cout << "Введите обе координаты левого верхнего угла.-" << endl;
+        freeInput();
+        return false;
+    }
+    leftCorner[0] = x;
+    leftCorner[1] = y;
+    return true;
 }
 
-void printAllParams(vector<Figure*> figures) {
-    for (int i = 0; i < figures.size(); i++) {
-        cout << "[" << i + 1 << "] ";
-        figures[i]->printParam();
+bool Rectangle::setRightCorner(float x, float y, bool incorrectInput) {
+    if (incorrectInput) {
+        cout << "Введите обе координаты правого нижнего угла." << endl;
+        freeInput();
+        return false;
     }
+    if (x < leftCorner[0] || y > leftCorner[1]) {
+        cout << "Введите коректный правый нижний угл. Вероятно ваша правая нижняя координата левее(выше) левого верхнего угла." << endl;
+        freeInput();
+        return false;
+    }
+    if (abs(x - leftCorner[0]) < 1e-6 || abs(y - leftCorner[1]) < 1e-6) {
+        cout << "Некорретная координата. Точки лежат на одной прямой" << endl;
+        freeInput();
+        return false;
+    }
+    rightCorner[0] = x;
+    rightCorner[1] = y;
+    return true;
 }
 
-void printAllAreas(vector<Figure*> figures) {
-    for (int i = 0; i < figures.size(); i++) {
-        cout << "[" << i + 1 << "] ";
-        figures[i]->printArea();
+bool Triangle::setA(float x, float y, bool incorrectInput) {
+    if (incorrectInput) {
+        cout << "Введите обе координаты угла." << endl;
+        freeInput();
+        return false;
     }
+    a[0] = x;
+    a[1] = y;
+    return true;
 }
 
-void sumAreas(vector<Figure*> figures) {
-    double sum = 0;
-    for (int i = 0; i < figures.size(); i++) {
-        sum += figures[i]->getArea();
+bool Triangle::setB(float x, float y, bool incorrectInput) {
+    if (incorrectInput) {
+        cout << "Введите обе координаты угла." << endl;
+        freeInput();
+        return false;
     }
-    cout << "Сумма площадей всех фигур: " << sum << endl;
+    if (a[0] == x && a[1] == y) {
+        cout << "Некорретная координата. Точка совпадает с уже имеющейся" << endl;
+        freeInput();
+        return false;
+    }
+    b[0] = x;
+    b[1] = y;
+    return true;
 }
 
-bool compare(Figure* a, Figure* b) {
-    return a->getArea() < b->getArea();
-};
-
-void sortByArea(vector<Figure*>* figures) {
-    sort(figures->begin(), figures->end(), compare);
-    cout << "Фигуры отсортированы по площади (по возрастанию)" << endl;
+bool Triangle::setC(float x, float y, bool incorrectInput) {
+    if (incorrectInput) {
+        cout << "Введите обе координаты угла." << endl;
+        freeInput();
+        return false;
+    }
+    c[0] = x;
+    c[1] = y;
+    if (this->getArea() < 1e-18) {
+        cout << "Некорретная координата. Все точки лежат на одной прямой" << endl;
+        freeInput();
+        return false;
+    }
+    return true;
 }
 
-void deleteClass(vector<Figure*>* arr, int index) {
-    delete (*arr)[index];
-    arr->erase(arr->begin() + index);
+double Polygon::getArea() {
+    float a = 0, b = 0;
+    for (size_t i = 0; i < corners.size()-1; i++) {
+        a += corners[i].x * corners[i+1].y;
+        b += corners[i].y * corners[i+1].x;
+    }
+    return abs(a-b)/2;
 }
 
-void deletePerNum(vector<Figure*>* figures) {
-    if (figures->empty()) {
-        cout << "Массив фигур пуст. Попробуйте сначала заполнить массив, чтобы удалить объект" << endl;
-        return;
+void Polygon::printParam() {
+    cout << "Тип: Выпуклый многоугольник ";
+    for (size_t i = 0; i < corners.size(); i++) {
+        cout << "| {" << i+1 << "} вершина: "<< corners[i].x << " " << corners[i].y << " ";
     }
-
-    int index;
-    cout << "Введите номер фигуры для удаления: ";
-    cin >> index;
-    index--;
-
-    if (index < 0 || index >= figures->size()) {
-        cout << "Такой фигуры нет. Попробуйте ввести коректный номер фигуры";
-        return;
-    }
-
-    deleteClass(figures, index);
-}
-
-vector<int> getIndexes(vector<Figure*> figures, int area) {
-    vector<int> indexes;
-    for (int i = 0; i < figures.size(); i++) {
-        if (figures[i]->getArea() > area) {
-            indexes.push_back(i);
-        }
-    }
-    return indexes;
-}
-
-void deletePerArea(vector<Figure*>* figures) {
-    if (figures->empty()) {
-        cout << "Массив фигур пуст. Попробуйте сначала заполнить массив, чтобы удалить объект" << endl;
-        return;
-    }
-
-    int area;
-    cout << "Фигуры большие этой площадь удаляться. Введите площадь: ";
-    cin >> area;
-
-    if (area <= 0) {
-        cout << "Площадь не может быть отрицательной. Попробуйте ввести коректную площадь";
-        return;
-    }
-
-    vector<int> indexes = getIndexes(*figures, area);
-    if (indexes.empty()) {
-        cout << "Таких объектов нет. Попробуйте ввести другую площадь." << endl;
-        return;
-    }
-
-    for (int i = 0; i < indexes.size(); i++) {
-        deleteClass(figures, indexes[i]);
-    }
+    cout << endl;
 }
