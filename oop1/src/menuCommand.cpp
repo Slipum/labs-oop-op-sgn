@@ -1,4 +1,4 @@
-#include "choices.h"
+#include "menuCommand.h"
 #include "stdfree.h"
 #include "validEnd.h"
 #include <iostream>
@@ -240,6 +240,10 @@ void Choices::printAllAreas(vector<Figure*> figures) {
 }
 
 void Choices::sumAreas(vector<Figure*> figures) {
+    if (figures.size() == 0) {
+        cout << "Массив фигур пуст. Попробуйте сначала добавить фигуру." << endl;
+        return;
+    }
     double sum = 0;
     for (size_t i = 0; i < figures.size(); i++) {
         sum += figures[i]->getArea();
@@ -248,6 +252,10 @@ void Choices::sumAreas(vector<Figure*> figures) {
 }
 
 void Choices::sortByArea(vector<Figure*>* figures) {
+    if (figures->size() == 0) {
+        cout << "Массив фигур пуст. Попробуйте сначала добавить фигуру." << endl;
+        return;
+    }
     sort(figures->begin(), figures->end(), this->compare);
     cout << "Фигуры отсортированы по площади (по возрастанию)" << endl;
 }

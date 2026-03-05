@@ -31,6 +31,7 @@ public:
     int addFigure(vector<Figure*>* figures);
 
     void printAllParams(vector<Figure*> figures);
+
     void printAllAreas(vector<Figure*> figures);
 
     void sumAreas(vector<Figure*> figures);
@@ -38,8 +39,20 @@ public:
     void sortByArea(vector<Figure*>* figures);
 
     void deletePerNum(vector<Figure*>* figures);
+
     void deletePerArea(vector<Figure*>* figures);
 };
+
+class MenuCommand {
+public:
+    virtual void exec(vector<Figure*>* figures);
+};
+
+class AddFigureCommand : public MenuCommand {
+public:
+    void exec(vector<Figure*>* figures) override;
+};
+
 
 
 

@@ -1,6 +1,6 @@
 #include "menu.h"
 #include "validEnd.h"
-#include "choices.h"
+#include "menuCommand.h"
 #include "stdfree.h"
 
 int Menu::validOption(int* option) {
