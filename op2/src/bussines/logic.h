@@ -22,12 +22,11 @@ Row** getTable(FILE* f, AppContext* context);
 int getRows(FILE* f);
 const char* getFieldByColumn(Row* row, int column, AppContext* context);
 
-Row** createTable(AppContext* context);
-void filterTable(AppContext* context, Row** table);
+Row** createTable(AppContext* context, char* filePath, char* region);
+void filterTable(AppContext* context, Row** table, char* region);
 
 char** getUniqueStrings(Row** strings, AppContext* context);
-void getMetrics(AppContext* context);
-void getMediana(AppContext* context);
+void getMetrics(AppContext* context, int colum);
 
 void quickSort(Row** table, int rows, int colum, AppContext* context);
 void getValSort(Row** table, int low, int high, int colum, AppContext* context);

@@ -5,7 +5,6 @@
 #include <QFont>
 #include <QMessageBox>
 #include <QStringList>
-#include <string.h>
 
 #include "../entrypoint/entrypoint.h"
 
@@ -21,6 +20,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->inputFileName->setReadOnly(true);
     ui->loadData->setEnabled(false);
 
+    ui->table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
     connect(ui->findFile, &QPushButton::clicked, this, &MainWindow::findFileClicked);
     connect(ui->loadData, &QPushButton::clicked, this, &MainWindow::getData);
     connect(ui->calculateMetrics, &QPushButton::clicked, this, &MainWindow::calculateMetrics);
@@ -28,46 +30,43 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    freeContext();
-    if (context.region) free(context.region);
-    if (context.regions) free(context.regions);
-    if (context.filePath) free(context.filePath);
-    if (context.metrics) free(context.metrics);
+    doOperation(&app, &context, FREE);
+    if (app.region) free(app.region);
+    if (app.filePath) free(app.filePath);
     delete ui;
 }
 
-void MainWindow::freeContext() {
-    if (context.outputMetrics) {
-        for (int i = 0; i < context.rows; i++) if (context.outputMetrics[i]) freeRow(context.outputMetrics[i]);
-        free(context.outputMetrics);
-        context.outputMetrics = nullptr;
-    }
-}
-
 void MainWindow::findFileClicked() {
-    updateContext();
+    ui->regionBox->clear();
+
+    ui->table->clear();
+    ui->table->setRowCount(0);
+    ui->table->setColumnCount(0);
+
+    if (app.region) {
+        free(app.region);
+        app.region = nullptr;
+    }
+    updateParams();
 
     ui->regionBox->setEnabled(true);
     ui->columeBox->setEnabled(true);
 }
 
-void MainWindow::updateContext() {
+void MainWindow::updateParams() {
     QByteArray dialog = QFileDialog::getOpenFileName(this, tr("Open File"), "/Users/slipum/project/Qt-projects/labs/op2", tr("CSV files (*.csv)")).toUtf8();
-    context.filePath = (char*)malloc(dialog.size() + 1);
-    strcpy(context.filePath, dialog.constData());
+    app.filePath = (char*)malloc(dialog.size() + 1);
+    strcpy(app.filePath, dialog.constData());
 
-    ui->inputFileName->setText(context.filePath);
+    ui->inputFileName->setText(app.filePath);
     ui->loadData->setEnabled(true);
 }
 
-
 void MainWindow::getData() {
-    freeContext();
     showLoadingDialog();
     loadRegion();
-    doCreateTable(&context, LOAD);
-    QStringList regionsList(context.regions, context.regions + context.uniqueRegionCount);
-    ui->regionBox->addItems(regionsList);
+    doOperation(&app, &context, LOAD);
+    updateRegionBox();
     hideLoadingDialog();
     if (context.error == INVALID_FILE || context.error == INVALID_PATH || context.error == INVALID_REGION) {
         ui->table->clear();
@@ -78,6 +77,23 @@ void MainWindow::getData() {
     }
     updateTable();
     createInfoWindow();
+}
+
+void MainWindow::updateRegionBox() {
+    QString currentText = ui->regionBox->currentText();
+
+    ui->regionBox->clear();
+    ui->regionBox->addItem("");
+
+    QStringList regions(context.regions, context.regions + context.uniqueRegionCount);
+    ui->regionBox->addItems(regions);
+
+    int index = ui->regionBox->findText(currentText);
+    if (index != -1) {
+        ui->regionBox->setCurrentIndex(index);
+    } else {
+        ui->regionBox->setCurrentIndex(0);
+    }
 }
 
 void MainWindow::updateTable() {
@@ -131,8 +147,8 @@ void MainWindow::updateFontTable() {
 void MainWindow::loadRegion() {
     if (ui->regionBox->count() == 0) return;
     QByteArray region = ui->regionBox->currentText().toUtf8();
-    context.region = (char*)malloc(region.size() + 1);
-    strcpy(context.region, region.constData());
+    app.region = (char*)malloc(region.size() + 1);
+    strcpy(app.region, region.constData());
 }
 
 void MainWindow::freeRow(Row* row) {
@@ -169,6 +185,7 @@ void MainWindow::createInfoWindow() {
 void MainWindow::createErrorWindow() {
     QMessageBox info(this);
     info.setWindowTitle("Error");
+    ui->regionBox->clear();
     switch (context.error) {
         case INVALID_PATH:  info.setText("Invalid path"); break;
         case INVALID_COLUMN: ui->outputMetrics->setText(""); info.setText("Invalid column"); break;
@@ -187,20 +204,14 @@ void MainWindow::createErrorWindow() {
     );
     info.exec();
 
-    context.error = 0;
+    doOperation(&app, &context, CLEAR_ERROR);
 }
 
 void MainWindow::calculateMetrics() {
-    if (context.filePath == nullptr) {
-        context.error = INVALID_PATH;
-        createErrorWindow();
-        return;
-    }
     getMetrics();
-    freeContext();
     loadRegion();
     showLoadingDialog();
-    doCreateTable(&context, METRICS);
+    doOperation(&app, &context, METRICS);
     hideLoadingDialog();
     if (context.error) {
         createErrorWindow();
@@ -253,7 +264,5 @@ void MainWindow::hideLoadingDialog() {
 }
 
 void MainWindow::getMetrics() {
-    context.colum = ui->columeBox->currentIndex();
-    if (context.colum != YEAR) context.colum++;
-    if (context.colum == REGION || context.colum > URBANIZATION || context.colum < YEAR) context.error = INVALID_COLUMN;
+    app.colum = ui->columeBox->currentIndex();
 };

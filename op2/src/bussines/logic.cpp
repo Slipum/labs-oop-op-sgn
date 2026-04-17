@@ -30,33 +30,69 @@ int validChar(char a, int type) {
 int validLine(Row* str) {
     if (!str->year || !str->region || !str->population || !str->birth_rate
         || !str->death_rate || !str->demographic || !str->urbanization) return 1;
-    if (str->year) for (int i = 0; i < str->year[i]; i++) if (validChar(str->year[i], YEAR)) return 1;
-    if (str->region) if (str->region[0] == ' ') return 1;
-    if (str->population) for (int i = 0; i < str->population[i]; i++) if (validChar(str->population[i], POPULATION)) return 1;
-    if (str->birth_rate) for (int i = 0; i < str->birth_rate[i]; i++) if (validChar(str->birth_rate[i], BIRTH_RATE)) return 1;
-    if (str->death_rate) for (int i = 0; i < str->death_rate[i]; i++) if (validChar(str->death_rate[i], DEATH_RATE)) return 1;
-    if (str->demographic) for (int i = 0; i < str->demographic[i]; i++) if (validChar(str->demographic[i], DEMOGRAPHIC)) return 1;
-    if (str->urbanization) for (int i = 0; i < str->urbanization[i]; i++) if (validChar(str->urbanization[i], URBANIZATION)) return 1;
+
+    for (int i = 0; str->year[i] != '\0'; i++)
+        if (validChar(str->year[i], YEAR)) return 1;
+
+    if (str->region[0] == ' ') return 1;
+
+    for (int i = 0; str->population[i] != '\0'; i++)
+        if (validChar(str->population[i], POPULATION)) return 1;
+
+    for (int i = 0; str->birth_rate[i] != '\0'; i++)
+        if (validChar(str->birth_rate[i], BIRTH_RATE)) return 1;
+
+    for (int i = 0; str->death_rate[i] != '\0'; i++)
+        if (validChar(str->death_rate[i], DEATH_RATE)) return 1;
+
+    for (int i = 0; str->demographic[i] != '\0'; i++)
+        if (validChar(str->demographic[i], DEMOGRAPHIC)) return 1;
+
+    for (int i = 0; str->urbanization[i] != '\0'; i++)
+        if (validChar(str->urbanization[i], URBANIZATION)) return 1;
+
     return 0;
 }
 
+
 void freeRow(Row* row) {
-    if (!row) return;
-    if (row->year) free(row->year);
-    if (row->region) free(row->region);
-    if (row->population) free(row->population);
-    if (row->birth_rate) free(row->birth_rate);
-    if (row->death_rate) free(row->death_rate);
-    if (row->demographic) free(row->demographic);
-    if (row->urbanization) free(row->urbanization);
+    if (row  == nullptr) return;
+    if (row->year != nullptr) {
+        free(row->year);
+        row->year = nullptr;
+    }
+    if (row->region != nullptr) {
+        free(row->region);
+        row->region = nullptr;
+    }
+    if (row->population != nullptr) {
+        free(row->population);
+        row->population = nullptr;
+    }
+    if (row->birth_rate != nullptr) {
+        free(row->birth_rate);
+        row->birth_rate = nullptr;
+    }
+    if (row->death_rate != nullptr) {
+        free(row->death_rate);
+        row->death_rate = nullptr;
+    }
+    if (row->demographic != nullptr) {
+        free(row->demographic);
+        row->demographic = nullptr;
+    }
+    if (row->urbanization != nullptr) {
+        free(row->urbanization);
+        row->urbanization = nullptr;
+    }
     free(row);
-    row = nullptr;
 }
 
 void freeTable(Row** table, int rows) {
     if (!table) return;
     for (int i = 0; i < rows; i++) {
         freeRow(table[i]);
+        table[i] = nullptr;
     }
     free(table);
     table = nullptr;
@@ -97,6 +133,7 @@ Row* getLine(char* buffer) {
 }
 
 Row** getTable(FILE* f, AppContext* context) {
+    if (context->rows == 0) return nullptr;
     Row** table = (Row**)calloc(context->rows, sizeof(Row*));
     if (!table) return nullptr;
 
@@ -120,15 +157,15 @@ int getRows(FILE* f) {
     return rows;
 }
 
-void filterTable(AppContext* context, Row** table) {
-    if (!context || !table || !context->region) return;
-    if (strlen(context->region) == 0) return;
+void filterTable(AppContext* context, Row** table, char* region) {
+    if (!context || !table || !region) return;
+    if (strlen(region) == 0) return;
 
     int i = 0;
     for (int rows = 0; rows < context->rows; ++rows) {
         Row* row = table[rows];
         if (!row || !row->region) continue;
-        if (strcmp(row->region, context->region) == 0) {
+        if (strcmp(row->region, region) == 0) {
             if (i != rows) {
                 table[i] = table[rows];
                 table[rows] = nullptr;
@@ -137,28 +174,6 @@ void filterTable(AppContext* context, Row** table) {
         }
     }
     context->rows = i;
-}
-
-void getMetrics(AppContext* context) {
-    if (!context || context->rows == 0 || !context->outputMetrics) return;
-
-    if (context->metrics) {
-        free(context->metrics);
-        context->metrics = nullptr;
-    }
-    context->metrics = (float*)calloc(MEDIANA+1, sizeof(float));
-    float min_val = INT16_MAX, max_val = INT16_MIN;
-    for (int i = 0; i < context->rows; i++) {
-        const char* row = getFieldByColumn(context->outputMetrics[i], context->colum, context);
-        if (context->outputMetrics[i] && row) {
-            float val = atof(row);
-            if (val < min_val) min_val = val;
-            if (val > max_val) max_val = val;
-        }
-    }
-
-    context->metrics[MINIMUM] = min_val;
-    context->metrics[MAXIMUM] = max_val;
 }
 
 const char* getFieldByColumn(Row* row, int column, AppContext* context) {
@@ -226,22 +241,41 @@ void quickSort(Row** table, int rows, int colum, AppContext* context) {
     getValSort(table, 0, rows - 1, colum, context);
 }
 
-void getMediana(AppContext* context) {
+void getMetrics(AppContext* context, int colum) {
     if (!context || !context->outputMetrics || context->error) return;
+    if (context->metrics) {
+        free(context->metrics);
+        context->metrics = nullptr;
+    }
+    context->metrics = (float*)calloc(MEDIANA+1, sizeof(float));
 
-    quickSort(context->outputMetrics, context->rows, context->colum, context);
-
+    quickSort(context->outputMetrics, context->rows, colum, context);
+    if (context->rows == 0) {
+        context->error = INVALID_FILE;
+        return;
+    }
     int mid = context->rows / 2;
     if (context->rows % 2 == 1) {
-        context->metrics[MEDIANA] = atof(getFieldByColumn(context->outputMetrics[mid], context->colum, context));
+        context->metrics[MEDIANA] = atof(getFieldByColumn(context->outputMetrics[mid], colum, context));
     } else {
-        float val1 = atof(getFieldByColumn(context->outputMetrics[mid-1], context->colum, context));
-        float val2 = atof(getFieldByColumn(context->outputMetrics[mid], context->colum, context));
+        float val1 = atof(getFieldByColumn(context->outputMetrics[mid-1], colum, context));
+        float val2 = atof(getFieldByColumn(context->outputMetrics[mid], colum, context));
         context->metrics[MEDIANA] = (val1 + val2) / 2.0f;
     }
+    context->metrics[MINIMUM] = atof(getFieldByColumn(context->outputMetrics[0], colum, context));
+    context->metrics[MAXIMUM] = atof(getFieldByColumn(context->outputMetrics[context->rows-1], colum, context));
 }
 
 char** getUniqueStrings(Row** strings, AppContext* context) {
+    if (context->uniqueRegionCount != 0) {
+        for (int i = 0; i < context->uniqueRegionCount; i++) {
+            free(context->regions[i]);
+            context->regions[i] = nullptr;
+        }
+        free(context->regions);
+        context->regions = nullptr;
+        context->uniqueRegionCount = 0;
+    }
     char** unique = (char**)malloc(sizeof(char*) * context->realRows);
 
     for (int i = 0; i < context->realRows; i++) {
@@ -271,8 +305,8 @@ char** getUniqueStrings(Row** strings, AppContext* context) {
     return unique;
 }
 
-Row** createTable(AppContext* context) {
-    FILE *f = fopen(context->filePath, "r");
+Row** createTable(AppContext* context, char* filePath, char* region) {
+    FILE *f = fopen(filePath, "r");
 
     if (f == nullptr) return nullptr;
     if (context->outputMetrics != nullptr) freeTable(context->outputMetrics, context->realRows);
@@ -282,9 +316,9 @@ Row** createTable(AppContext* context) {
     context->realRows = realRows;
     rewind(f);
     Row** table = getTable(f, context);
-    if (context->regions == nullptr) context->regions = getUniqueStrings(table, context);
+    context->regions = getUniqueStrings(table, context);
 
-    if (context->region) filterTable(context, table);
+    if (region) filterTable(context, table, region);
 
     if (context->realRows == 0) context->error = INVALID_FILE;
 

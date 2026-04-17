@@ -6,8 +6,10 @@
 enum Operations {
     LOAD,
     METRICS,
+    FREE,
+    CLEAR_ERROR,
 };
 
-void doCreateTable(AppContext* context, int operation);
+void doOperation(AppParams* app, AppContext* context, int operation);
 
 #endif //OP2_ENTRYPOINT_H

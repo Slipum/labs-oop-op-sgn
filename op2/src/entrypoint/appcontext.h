@@ -36,12 +36,14 @@ struct Row {
     char* urbanization = nullptr;
 };
 
-struct AppContext {
+typedef struct {
     char* filePath = nullptr;
-    int colum;
-    float* metrics = nullptr;
-
     char* region = nullptr;
+    int colum;
+} AppParams;
+
+typedef struct {
+    float* metrics = nullptr;
     char** regions = nullptr;
     int uniqueRegionCount = 0;
 
@@ -49,6 +51,6 @@ struct AppContext {
     int rows;
     int realRows;
     int error = 0;
-};
+} AppContext;
 
 #endif //OP2_APPCONTEXT_H

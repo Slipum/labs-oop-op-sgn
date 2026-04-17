@@ -27,8 +27,8 @@ private slots:
 private:
     Ui::MainWindow *ui;
     AppContext context;
+    AppParams app;
     QProgressDialog* loadingDialog;
-    void freeContext();
 
     void createInfoWindow();
     void createErrorWindow();
@@ -37,7 +37,8 @@ private:
     void showLoadingDialog();
     void hideLoadingDialog();
 
-    void updateContext();
+    void updateRegionBox();
+    void updateParams();
     void loadRegion();
     void updateTable();
     void setTable();
