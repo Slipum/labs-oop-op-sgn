@@ -15,8 +15,16 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED)
 
-add_executable(oop3 ./main.cpp ./mainwindow.cpp)
-target_link_libraries(op2
+add_executable(oop3
+        src/main.cpp
+        src/interface/mainwindow.cpp
+        src/interface/mainwindow.h
+        src/bussines/calculator.cpp
+        src/entrypoint/appcontext.h
+        src/entrypoint/entrypoint.h
+        src/entrypoint/entrypoint.cpp
+)
+target_link_libraries(oop3
         Qt::Core
         Qt::Gui
         Qt::Widgets

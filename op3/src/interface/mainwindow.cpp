@@ -68,7 +68,7 @@ void MainWindow::getData() {
     doOperation(&app, &context, LOAD);
     updateRegionBox();
     hideLoadingDialog();
-    if (context.error == INVALID_FILE || context.error == INVALID_PATH || context.error == INVALID_REGION) {
+    if (context.error == INVALID_FILE || context.error == INVALID_PATH || context.error == INVALID_REGION || context.error == INVALID_CLOSE) {
         ui->table->clear();
         ui->table->setRowCount(0);
         ui->table->setColumnCount(0);
@@ -191,6 +191,7 @@ void MainWindow::createErrorWindow() {
         case INVALID_REGION: info.setText("Incorrect region"); break;
         case INVALID_GRAPH: info.setText("Such a region occurs only once"); break;
         case INVALID_FILE: info.setText("Invalid file"); break;
+        case INVALID_CLOSE: info.setText("Error with close file"); break;
     }
     info.setStyleSheet(
         "QMessageBox {"
@@ -208,6 +209,11 @@ void MainWindow::createErrorWindow() {
 }
 
 void MainWindow::calculateMetrics() {
+    if (graph) {
+        graph->close();
+        graph->deleteLater();
+        graph = nullptr;
+    }
     getMetrics();
     loadRegion();
     showLoadingDialog();
@@ -219,9 +225,8 @@ void MainWindow::calculateMetrics() {
     }
     updateTable();
 
-    GraphWindow* graph = new GraphWindow(&context, &app);
+    graph = new GraphWindow(&context, &app);
     graph->show();
-
     // if (context.metrics) createMetricsWindow();
 }
 

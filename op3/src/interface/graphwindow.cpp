@@ -1,10 +1,11 @@
 #include "graphwindow.h"
-
+#include "../bussines/logic_graph.h"
 #include <QPainter>
 
 GraphWindow::GraphWindow(AppContext *context, AppParams* app, QWidget *parent) : context(context), app(app), QWidget(parent) {
-    resize(1000, 800);
+    resize(STANDART_WIDTH, STANDART_HEIGHT);
     setWindowTitle("Graph Window");
+    this->setMinimumSize(MIN_WIDTH, MIN_HEIGHT);
 
     QPalette palette = this->palette();
     palette.setColor(QPalette::Window, Qt::white);
@@ -28,18 +29,18 @@ void GraphWindow::paintEvent(QPaintEvent* event) {
     addingPadding(&yMin, &yMax);
 
     int bottomMargin = allPositiveY ? POSITIVE_MARGIN : NEGATIVE_MARGIN;
-    int plotX0 = LEFT_MARGIN, plotY0 = RIGHT_MARGIN;
-    int plotWidth = width() - LEFT_MARGIN - RIGHT_MARGIN;
-    int plotHeight = height() - bottomMargin - RIGHT_MARGIN;
+    int plotX0 = LEFT_MARGIN, plotY0 = TOP_MARGIN; // левая граница | верхняя граница
+    int plotWidth = width() - LEFT_MARGIN - TOP_MARGIN; // ширина графика
+    int plotHeight = height() - bottomMargin - TOP_MARGIN; // высота графика
 
-    double scaleX = (xMax > xMin) ? static_cast<double>(plotWidth) / (xMax - xMin) : 1.0;
-    double scaleY = (yMax > yMin) ? static_cast<double>(plotHeight) / (yMax - yMin) : 1.0;
+    double scaleX = (xMax > xMin) ? static_cast<double>(plotWidth) / (xMax - xMin) : 1.0; // реальный размер X
+    double scaleY = (yMax > yMin) ? static_cast<double>(plotHeight) / (yMax - yMin) : 1.0; // реальный размер Y
 
-    int oxY_screen = createOX(painter, plotX0, plotY0, plotHeight, plotWidth, scaleY, yMin, allPositiveY);
+    int oxStart = createOX(painter, plotX0, plotY0, plotHeight, plotWidth, scaleY, yMin, allPositiveY);
     createOY(painter, plotX0, plotY0, xMin, scaleX, plotHeight);
 
     getFont(painter);
-    infoX(painter, plotX0, oxY_screen, xMin, xMax, scaleX);
+    infoX(painter, plotX0, oxStart, xMin, xMax, scaleX);
     infoY(painter, plotX0, plotY0, yMin, yMax, scaleY, plotHeight);
 
     createGraph(painter, plotX0, plotY0, xMin, yMin, scaleX, scaleY, plotHeight);
@@ -52,12 +53,12 @@ void GraphWindow::addingPadding(double* yMin, double* yMax) {
     if (yPadding == 0) yPadding = 1.0;
 
     if (*yMin >= 0) {
-        double extraPadding = *yMax * 0.05;
-        *yMin -= extraPadding;
+        double padding = *yMax * 0.05;
+        *yMin -= padding;
         *yMax += yPadding;
     } else if (*yMax <= 0) {
-        double extraPadding = (-*yMin) * 0.05;
-        *yMax = 0.0 + extraPadding;
+        double padding = (-*yMin) * 0.05;
+        *yMax = 0.0 + padding;
         *yMin -= yPadding;
     } else {
         *yMin -= yPadding;
@@ -72,15 +73,15 @@ void GraphWindow::createOY(QPainter* painter, int plotX0, int plotY0, double xMi
 }
 
 int GraphWindow::createOX(QPainter* painter, int plotX0, int plotY0, double plotHeight, double plotWidth, double scaleY, double yMin, bool allPositiveY) {
-    int oxY_screen;
+    int oxStart;
     if (allPositiveY && yMin >= 0) {
-        oxY_screen = plotY0 + plotHeight + 5;
+        oxStart = plotY0 + plotHeight + 5;
     } else {
-        oxY_screen = plotY0 + plotHeight - (0.0 - yMin) * scaleY;
+        oxStart = plotY0 + plotHeight - (0.0 - yMin) * scaleY;
     }
     painter->setPen(QPen(Qt::black, 2));
-    painter->drawLine(plotX0, oxY_screen, plotX0 + plotWidth, oxY_screen);
-    return oxY_screen;
+    painter->drawLine(plotX0, oxStart, plotX0 + plotWidth, oxStart);
+    return oxStart;
 }
 
 void GraphWindow::getFont(QPainter* painter) {
@@ -90,30 +91,29 @@ void GraphWindow::getFont(QPainter* painter) {
     painter->setPen(Qt::darkGray);
 };
 
-void GraphWindow::infoX(QPainter* painter, int plotX0, int oxY_screen, double xMin, double xMax, double scaleX) {
+void GraphWindow::infoX(QPainter* painter, int plotX0, int oxStart, double xMin, double xMax, double scaleX) {
     int numTicksX = 10;
     for (int i = 0; i <= numTicksX; ++i) {
         double dataX = xMin + (xMax - xMin) * i / numTicksX;
         float screenX = plotX0 + (dataX - xMin) * scaleX;
-        int screenY = oxY_screen + 18;
+        int screenY = oxStart + 18;
 
         QString label = QString::number(static_cast<int>(std::round(dataX)));
         painter->drawText(static_cast<int>(screenX) - 25, screenY, 50, 20, Qt::AlignCenter, label);
-        painter->drawLine(static_cast<int>(screenX), oxY_screen - 5, static_cast<int>(screenX), oxY_screen);
+        painter->drawLine(static_cast<int>(screenX), oxStart - 5, static_cast<int>(screenX), oxStart);
     }
 }
 
 void GraphWindow::infoY(QPainter* painter, int plotX0, int plotY0, double yMin, double yMax, double scaleY, int plotHeight) {
-    int numTicksY = 11;
-    for (int i = 0; i <= numTicksY; ++i) {
-        double dataY = yMin + (yMax - yMin) * i / numTicksY;
+    for (int i = 0; i <= COUNT_DOTS_OX; ++i) {
+        double dataY = yMin + (yMax - yMin) * i / COUNT_DOTS_OX;
         float screenY = plotY0 + plotHeight - (dataY - yMin) * scaleY;
 
-        int labelX = plotX0 - 45;
-        QString label = QString::number(dataY, 'f', 1);
-        painter->drawText(labelX, static_cast<int>(screenY) - 10, 40, 20,
+        int labelX = plotX0 - TEXT_OFFSET;
+        QString label = QString::number(dataY, 'f', 1); // для округления до 0.1f
+        painter->drawText(labelX, static_cast<int>(screenY) - 10, WIDTH_TEXT, HEIGHT_TEXT,
                          Qt::AlignRight | Qt::AlignVCenter, label);
-        painter->drawLine(plotX0, static_cast<int>(screenY), plotX0 + 5, static_cast<int>(screenY));
+        painter->drawLine(plotX0, static_cast<int>(screenY), plotX0 + ADDITION_LENGTH, static_cast<int>(screenY));
     }
 }
 
@@ -126,7 +126,7 @@ void GraphWindow::createGraph(QPainter* painter, int plotX0, int plotY0, double 
 
         Row* row = context->outputMetrics[i];
 
-        double dataX = QString::fromUtf8(row->year).toDouble();   // год
+        double dataX = QString::fromUtf8(row->year).toDouble();
         double dataY = QString::fromUtf8(getColumnName(row, app->colum)).toDouble();
 
         float screenX = plotX0 + (dataX - xMin) * scaleX;
@@ -140,7 +140,7 @@ void GraphWindow::createGraph(QPainter* painter, int plotX0, int plotY0, double 
         painter->setPen(Qt::NoPen);
         painter->setBrush(Qt::blue);
         for (const QPointF& p : points) {
-            painter->drawEllipse(p, 4, 4);
+            painter->drawEllipse(p, DOT_SIZE, DOT_SIZE);
         }
     }
 }

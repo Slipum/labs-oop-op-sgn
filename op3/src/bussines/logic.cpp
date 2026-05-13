@@ -327,6 +327,9 @@ Row** createTable(AppContext* context, char* filePath, char* region) {
 
     if (context->realRows == 0) context->error = INVALID_FILE;
 
-    fclose(f);
+    if (fclose(f)) {
+        context->error = INVALID_CLOSE;
+        return nullptr;
+    }
     return table;
 }

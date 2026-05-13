@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QProgressDialog>
+
+#include "graphwindow.h"
 #include "../entrypoint/appcontext.h"
 
 QT_BEGIN_NAMESPACE
@@ -28,6 +30,7 @@ private:
     AppContext context;
     AppParams app;
     QProgressDialog* loadingDialog;
+    GraphWindow* graph = nullptr;
 
     void createInfoWindow();
     void createErrorWindow();

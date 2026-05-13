@@ -9,6 +9,7 @@ enum Errors {
     INVALID_FILE = -3,
     INVALID_REGION = -4,
     INVALID_GRAPH = -5,
+    INVALID_CLOSE = -6,
 };
 
 enum Metrics {
