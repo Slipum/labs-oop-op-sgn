@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+
+#include "facade.h"
 #include "graphics/visual.h"
 
 #define MIN_WIDTH 400
@@ -17,14 +19,15 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     bool animation = false;
+    Facade _facade;
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(Facade& facade, QWidget *parent = nullptr);
     ~MainWindow();
 
 protected:
-    bool eventFilter(QObject *obj, QEvent *event);
     void keyPressEvent(QKeyEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event);
     void mousePressEvent(QMouseEvent *event) override;
 
 private:

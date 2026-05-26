@@ -1,35 +1,18 @@
 #ifndef OOP4_SCENE_H
 #define OOP4_SCENE_H
-#include <QWidget>
 #include <vector>
-
-#include "object/object.h"
+#include "entities/abstructs/figure.h"
 
 class Scene {
 public:
     Scene() = default;
-    Scene(std::vector<Figure> figures) : _figures(figures) {};
+    Scene(std::vector<Figure> figures)
+    : _figures(std::move(figures)) {}
 
-    std::vector<Figure>& GetFigures() { return _figures; };
-    void TransformFigures(TransformMatrix matrix);
+    const std::vector<Figure>& GetFigures() const { return _figures;};
+    void Transform(const TransformMatrix& matrix);
 private:
     std::vector<Figure> _figures;
-};
-
-
-
-class SceneDrawerBase {
-public:
-    virtual void DrawScene(Scene& scene) = 0;
-};
-
-class QtSceneDrawer : public SceneDrawerBase {
-public:
-    QtSceneDrawer(QWidget* widget) : _widget(widget) {};
-
-    void DrawScene(Scene& scene) override;
-private:
-    QWidget* _widget;
 };
 
 #endif //OOP4_SCENE_H

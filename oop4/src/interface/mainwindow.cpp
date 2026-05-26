@@ -10,21 +10,15 @@
 #include <QKeyEvent>
 #include <QIntValidator>
 
-#include "../facade.h"
-
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+MainWindow::MainWindow(Facade& facade, QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow), _facade(facade)
 {
     ui->setupUi(this);
     this->setMinimumSize(MIN_WIDTH, MIN_HEIGHT);
 
     ui->filePath->setEnabled(false);
 
-    FileReader reader;
-    QtSceneDrawer drawer(ui->visual);
-    Facade* facade = new Facade(&reader, &drawer);
-    auto visual = new VisualWidget(facade, animation);
+    auto visual = new VisualWidget(_facade, animation);
     auto layout = new QVBoxLayout(ui->visual);
     layout->setContentsMargins(0,0,0,0);
     layout->addWidget(visual);
@@ -33,9 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->slider->setMaximum(10);
     ui->slider->setValue(1);
 
-    connect(ui->slider, &QSlider::sliderReleased, this, [this, visual]() {
-    updateSlider(visual);
-    });
+    connect(ui->slider, &QSlider::sliderReleased, this, [this]() {});
 
     ui->inputRangeLeft->setValidator(new QIntValidator(this));
     ui->inputRangeRight->setValidator(new QIntValidator(this));
@@ -93,47 +85,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     }
 }
 
-void MainWindow::keyPressEvent(QKeyEvent* event) {
-    switch (event->key()) {
-        case Qt::Key_W:
-            // doOperation(nullptr, &context, Operation::MOV_FORWARD);
-            break;
-        case Qt::Key_A:
-            // doOperation(nullptr, &context, Operation::MOV_LEFT);
-            break;
-        case Qt::Key_S:
-            // doOperation(nullptr, &context, Operation::MOV_BACKWARD);
-            break;
-        case Qt::Key_D:
-            // doOperation(nullptr, &context, Operation::MOV_RIGHT);
-            break;
-        case Qt::Key_Space:
-            // doOperation(nullptr, &context, Operation::MOV_UP);
-            break;
-        case Qt::Key_Shift:
-            // doOperation(nullptr, &context, Operation::MOV_DOWN);
-            break;
-        case Qt::Key_X:
-            // doOperation(nullptr, &context, Operation::ROTATE_LEFT);
-            break;
-        case Qt::Key_C:
-            // doOperation(nullptr, &context, Operation::ROTATE_RIGHT);
-            break;
-        case Qt::Key_R:
-            // doOperation(nullptr, &context, Operation::ROTATE_FRONT);
-            break;
-        case Qt::Key_F:
-            // doOperation(nullptr, &context, Operation::ROTATE_BACK);
-            break;
-        case Qt::Key_Q:
-            // doOperation(nullptr, &context, Operation::ROTATE_Y_LEFT);
-            break;
-        case Qt::Key_E:
-            // doOperation(nullptr, &context, Operation::ROTATE_Y_RIGHT);
-            break;
-    }
-}
-
 void MainWindow::mousePressEvent(QMouseEvent* event) {
     QMainWindow::mousePressEvent(event);
 
@@ -153,8 +104,70 @@ void MainWindow::updateSlider(VisualWidget *visual)
 
 }
 
-void MainWindow::findClicked() {
+void MainWindow::findClicked()
+{
+    QString path = QFileDialog::getOpenFileName(this, tr("Open File"),"/Users/slipum/project/Qt-projects/labs/oop4",tr("CSV files (*.csv)"));
 
+    if (path.isEmpty())
+        return;
+
+    NormalizationParameters params{};
+
+    auto result = _facade.LoadScene(path.toStdString(), params);
+
+    if (!result.IsSuccess()) {
+        QMessageBox::critical(this, "Error", result.GetErrorMessage().c_str());
+        return;
+    }
+
+    ui->filePath->setText(path);
+    ui->visual->update();
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event) {
+    constexpr float moveStep = 5.0f;
+    constexpr float rotStep = 0.1f;
+
+    switch (event->key()) {
+    case Qt::Key_W:
+        _facade.MoveScene(0, 0, -moveStep);
+        break;
+    case Qt::Key_S:
+        _facade.MoveScene(0, 0, moveStep);
+        break;
+    case Qt::Key_A:
+        _facade.MoveScene(-moveStep, 0, 0);
+        break;
+    case Qt::Key_D:
+        _facade.MoveScene(moveStep, 0, 0);
+        break;
+    case Qt::Key_Space:
+        _facade.MoveScene(0, moveStep, 0);
+        break;
+    case Qt::Key_Shift:
+        _facade.MoveScene(0, -moveStep, 0);
+        break;
+    case Qt::Key_R:
+        _facade.RotateScene(rotStep, 0, 0);
+        break;
+    case Qt::Key_F:
+        _facade.RotateScene(-rotStep, 0, 0);
+        break;
+    case Qt::Key_Q:
+        _facade.RotateScene(0, rotStep, 0);
+        break;
+    case Qt::Key_E:
+        _facade.RotateScene(0, -rotStep, 0);
+        break;
+    case Qt::Key_X:
+        _facade.RotateScene(0, 0, rotStep);
+        break;
+    case Qt::Key_C:
+        _facade.RotateScene(0, 0, -rotStep);
+        break;
+    }
+
+    update();
 }
 
 void MainWindow::setupStyles() {

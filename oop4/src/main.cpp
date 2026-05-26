@@ -4,12 +4,17 @@
 
 #include <QApplication>
 
-#include "facade.h"
+#include "interface/qtscene.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
+
+    Scene scene;
+    FileReader reader;
+    Facade facade(reader, scene);
+
+    MainWindow w(facade);
     w.setWindowTitle("3D Graphics");
     w.show();
     return a.exec();

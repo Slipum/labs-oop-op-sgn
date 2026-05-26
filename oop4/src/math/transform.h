@@ -1,15 +1,18 @@
 #ifndef OOP4_TRANSFORM_H
 #define OOP4_TRANSFORM_H
-#include "../scene/object/point.h"
 
-#define MATRIX_SIZE 4
+#define SIZE_MATRIX 4
+#include "../entities/point.h"
 
 class TransformMatrix {
 public:
-    TransformMatrix operator*(TransformMatrix m);
-    Point3D TransformPoint(Point3D p);
+    TransformMatrix();
+
+    TransformMatrix operator*(const TransformMatrix& matrix) const;
+    Point3D TransformPoint(const Point3D& point) const;
 private:
-    float _matr[MATRIX_SIZE][MATRIX_SIZE];
+    float _matr[SIZE_MATRIX][SIZE_MATRIX];
+    friend class TransformMatrixBuilder;
 };
 
 class TransformMatrixBuilder {

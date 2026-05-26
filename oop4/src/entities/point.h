@@ -2,7 +2,9 @@
 #define OOP4_POINT_H
 
 struct Point3D {
-    float x, y, z;
+    float x;
+    float y;
+    float z;
 };
 
 #endif //OOP4_POINT_H

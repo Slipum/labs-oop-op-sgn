@@ -3,7 +3,8 @@
 
 #include <QWidget>
 #include <QPainter>
-#include "../../facade.h"
+
+#include "facade.h"
 
 class VisualWidget : public QWidget
 {
@@ -12,9 +13,10 @@ class VisualWidget : public QWidget
     QTimer *timer;
     size_t size = 1;
     bool _animation;
+    Facade& _facade;
 
 public:
-    explicit VisualWidget(Facade* facade, bool& animation, QWidget* parent = nullptr);
+    explicit VisualWidget(Facade& facade, bool& animation, QWidget* parent = nullptr);
     ~VisualWidget() = default;
 
 protected:
