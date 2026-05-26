@@ -15,6 +15,17 @@ find_package(Qt6 REQUIRED COMPONENTS
         Widgets
 )
 
+include(FetchContent)
+
+FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip
+)
+
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
 add_executable(oop4
         src/main.cpp
         src/facade.cpp
