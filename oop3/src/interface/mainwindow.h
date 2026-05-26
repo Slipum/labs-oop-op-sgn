@@ -47,6 +47,8 @@ private:
     void slashClicked();
     void multiClicked();
 
+    void funcXClicked();
+
     void clear();
     void del();
 

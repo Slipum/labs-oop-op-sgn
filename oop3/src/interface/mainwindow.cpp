@@ -40,6 +40,8 @@ void MainWindow::connectBtns() {
     connect(ui->minusBtn, &QPushButton::clicked, this, &MainWindow::minusClicked);
     connect(ui->plusBtn, &QPushButton::clicked, this, &MainWindow::plusClicked);
     connect(ui->multiBtn, &QPushButton::clicked, this, &MainWindow::multiClicked);
+
+    connect(ui->funcXBtn, &QPushButton::clicked, this, &MainWindow::funcXClicked);
 }
 
 bool MainWindow::endsWithOperator() {
@@ -57,7 +59,7 @@ void MainWindow::multiClicked() {
 }
 
 void MainWindow::plusClicked() {
-    if (!endsWithOperator())
+    if (!endsWithOperator() && !ui->input->text().isEmpty())
         ui->input->insert("+");
 }
 
@@ -90,7 +92,6 @@ void MainWindow::leftClicked() {
 void MainWindow::rightClicked() {
     ui->input->insert(")");
 }
-
 
 void MainWindow::zeroClicked() {
     ui->input->insert("0");
@@ -129,6 +130,11 @@ void MainWindow::eightClicked() {
 
 void MainWindow::nineClicked() {
     ui->input->insert("9");
+}
+
+void MainWindow::funcXClicked() {
+    ui->input->insert(")");
+    ui->input->setText("1/("+ui->input->text());
 }
 
 void MainWindow::dotClicked() {

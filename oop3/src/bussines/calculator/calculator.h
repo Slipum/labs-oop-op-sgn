@@ -8,22 +8,18 @@ using StackNumbers = std::stack<Accuracy>;
 using StackOperations = std::stack<char>;
 
 class Calculator {
-    std::string& input;
-    std::string& output;
-    std::string temp;
-
     Accuracy getElem(StackNumbers& stack);
     Accuracy getOperation(Accuracy a, Accuracy b, char operation);
-    int getPriority(char operation);
 
-    void normalizeInput();
-    void normalizeOutput();
-    void getPostfix();
-    void calc();
+    void normalizeNumbers(size_t& i, std::vector<char>& str);
+    bool unaryMinus(size_t& i, std::vector<char>& str);
 public:
-    Calculator(std::string& input, std::string& output);
-
+    Calculator() = default;
     ~Calculator() = default;
+
+    void normalizeInput(std::string& input);
+    std::string calculate(std::string input);
+    void normalizeOutput(std::string& output);
 };
 
 #endif //OOP3_CALCULATOR_H

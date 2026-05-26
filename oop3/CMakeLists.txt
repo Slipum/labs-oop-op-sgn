@@ -18,11 +18,11 @@ find_package(Qt6 COMPONENTS
 add_executable(oop3
         src/main.cpp
         src/interface/mainwindow.cpp
-        src/interface/mainwindow.h
-        src/bussines/calculator.cpp
-        src/entrypoint/appcontext.h
-        src/entrypoint/entrypoint.h
+        src/bussines/calculator/calculator.cpp
         src/entrypoint/entrypoint.cpp
+        src/bussines/facade/facade.cpp
+        src/bussines/command/commands.cpp
+        src/bussines/command/index.cpp
 )
 target_link_libraries(oop3
         Qt::Core
