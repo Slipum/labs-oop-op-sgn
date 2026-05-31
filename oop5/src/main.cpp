@@ -3,7 +3,7 @@
 #include "interface/mainwindow.h"
 #include <QApplication>
 
-#include "abstructs/builder/builder.h"
+#include "facade.h"
 
 
 int main(int argc, char *argv[]) {
@@ -12,11 +12,14 @@ int main(int argc, char *argv[]) {
     // w.setWindowTitle("Simulator elevator");
     // w.show();
     // return a.exec();
-    ElevatorBuilder elevatorBuilder;
-    auto elevator = elevatorBuilder.createElevator(10);
-    std::cout << elevator->getFloor() << std::endl << std::endl;
-    elevator->setFloor(4);
-    std::cout << elevator->getController()->getFloor() << std::endl;
+    ElevatorFacade facade(10);
+
+    facade.AcceptFromCabin(5);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    facade.AcceptFromCabin(3);
+    facade.AcceptFromCabin(2);
+    facade.AcceptFromCabin(7);
+    facade.AcceptFromCabin(6);
 
     return 0;
 }

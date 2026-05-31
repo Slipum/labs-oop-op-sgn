@@ -12,12 +12,9 @@ public:
 
 class ElevatorDoor : public IDoor {
 public:
-    ElevatorDoor() {}
-    ~ElevatorDoor() {}
-
     bool isOpen() override { return _isOpen; }
-    void open() override { _isOpen = true; }
-    void close() override { _isOpen = false; }
+    void open() override;
+    void close() override;
 private:
     bool _isOpen = false;
 };

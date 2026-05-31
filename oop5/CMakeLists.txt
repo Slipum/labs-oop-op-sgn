@@ -41,11 +41,8 @@ add_library(core
         src/abstructs/builder/builder.h
         src/manager/manager.cpp
         src/manager/manager.h
-        #        src/facade.cpp
-#        src/abstructs/cabin/cabin.cpp
-#        src/abstructs/door/door.cpp
-#        src/abstructs/elevator/elevator.cpp
-#        src/abstructs/builder.cpp
+        src/facade.cpp
+        src/facade.h
 )
 
 target_include_directories(core PUBLIC src)
