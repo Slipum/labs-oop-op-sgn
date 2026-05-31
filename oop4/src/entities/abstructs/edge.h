@@ -11,6 +11,16 @@ public:
     const std::shared_ptr<Vertex>& GetBegin() const { return _begin; }
     const std::shared_ptr<Vertex>& GetEnd() const { return _end; }
 
+    void Transform(const TransformMatrix& matrix) {
+        if (_begin) {
+            _begin->Transform(matrix);
+        }
+
+        if (_end && _end != _begin) {
+            _end->Transform(matrix);
+        }
+    }
+
 private:
     std::shared_ptr<Vertex> _begin;
     std::shared_ptr<Vertex> _end;

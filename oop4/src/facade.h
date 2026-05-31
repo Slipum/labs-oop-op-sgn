@@ -19,10 +19,14 @@ private:
     std::string _errorMessage;
     bool _isSuccess;
 };
+
 class Facade {
 public:
     Facade(BaseFileReader& fileReader, Scene& scene)
         : _fileReader(fileReader), _scene(scene) {}
+
+    Facade(BaseFileReader& fileReader, SceneDrawerBase& drawer, Scene& scene)
+        : _fileReader(fileReader), _sceneDrawer(&drawer), _scene(scene) {}
 
     void SetDrawer(SceneDrawerBase* drawer) { _sceneDrawer = drawer; }
 
@@ -30,12 +34,15 @@ public:
     FacadeOperationResult LoadScene(std::string path, NormalizationParameters parameters);
 
     FacadeOperationResult MoveScene(float x, float y, float z);
+    FacadeOperationResult MoveSceneLocal(float x, float y, float z);
+    FacadeOperationResult MoveSceneRelative(float x, float z);
+
     FacadeOperationResult RotateScene(float x, float y, float z);
     FacadeOperationResult ScaleScene(float x, float y, float z);
 
 private:
     BaseFileReader& _fileReader;
-    SceneDrawerBase* _sceneDrawer;
+    SceneDrawerBase* _sceneDrawer = nullptr;
     Scene& _scene;
 };
 #endif

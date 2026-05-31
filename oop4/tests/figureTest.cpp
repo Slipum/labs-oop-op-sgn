@@ -44,3 +44,19 @@ TEST(FigureTest, TransformMovesAllVertices) {
     EXPECT_FLOAT_EQ(f.GetVertices()[0].GetPosition().x, 11);
     EXPECT_FLOAT_EQ(f.GetVertices()[1].GetPosition().x, 10);
 }
+
+TEST(FigureTest, TransformMovesEdgeEndpoints) {
+    Figure f;
+
+    f.AddEdge(Edge(
+        std::make_shared<Vertex>(1, 0, 0),
+        std::make_shared<Vertex>(0, 1, 0)
+    ));
+
+    auto m = TransformMatrixBuilder::CreateMoveMatrix(10, 0, 0);
+
+    f.Transform(m);
+
+    EXPECT_FLOAT_EQ(f.GetEdges()[0].GetBegin()->GetPosition().x, 11);
+    EXPECT_FLOAT_EQ(f.GetEdges()[0].GetEnd()->GetPosition().x, 10);
+}

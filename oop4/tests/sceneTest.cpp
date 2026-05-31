@@ -52,6 +52,20 @@ TEST(SceneTest, EmptyScene) {
     EXPECT_NO_THROW(scene.Transform(m));
 }
 
+TEST(SceneTest, CenterUsesBoundingBox) {
+    Figure f;
+    f.AddVertex(Vertex(0, 10, -2));
+    f.AddVertex(Vertex(10, 20, 6));
+
+    Scene scene({f});
+
+    auto center = scene.GetCenter();
+
+    EXPECT_FLOAT_EQ(center.x, 5);
+    EXPECT_FLOAT_EQ(center.y, 15);
+    EXPECT_FLOAT_EQ(center.z, 2);
+}
+
 TEST(SceneTest, MultipleFiguresTransform) {
     Figure f1;
     f1.AddVertex(Vertex(1, 0, 0));

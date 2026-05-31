@@ -1,5 +1,6 @@
 #include "visual.h"
 
+#include <QColor>
 #include <QTimer>
 
 #include "interface/qtscene.h"
@@ -33,6 +34,11 @@ VisualWidget::VisualWidget(Facade& facade, bool& animation, QWidget *parent)
 void VisualWidget::paintEvent(QPaintEvent*)
 {
     QPainter painter(this);
+    painter.fillRect(rect(), QColor("#25272c"));
+
+    if (_animation) {
+        _facade.RotateScene(0.0f, 0.02f, 0.0f);
+    }
 
     QtSceneDrawer drawer(painter);
 
