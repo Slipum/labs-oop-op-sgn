@@ -19,7 +19,9 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     bool animation = false;
-    Facade _facade;
+    Facade& _facade;
+    VisualWidget* _visual = nullptr;
+    QString _currentFilePath;
 
 public:
     explicit MainWindow(Facade& facade, QWidget *parent = nullptr);
@@ -27,7 +29,7 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
-    bool eventFilter(QObject *obj, QEvent *event);
+    bool eventFilter(QObject *obj, QEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
 
 private:
@@ -35,8 +37,14 @@ private:
 
     void setupStyles();
 
-    void updateSlider(VisualWidget *visual);
+    void updateSlider();
+    void resetPosition();
     void findClicked();
+
+    bool applyControlKey(int key);
+    void readNormalizationParameters(NormalizationParameters& params);
+    void reloadScene();
+    void updateVisualization();
 
     void normalize();
     void setAnimation();

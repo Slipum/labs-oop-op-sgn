@@ -33,6 +33,7 @@ add_library(core
         src/entities/abstructs/services/figure.cpp
         src/entities/abstructs/services/vertex.cpp
         src/math/transform.cpp
+        src/scene/camera.cpp
         src/scene/scene.cpp
         src/business/file.cpp
         src/facade.cpp
@@ -41,7 +42,7 @@ add_library(core
 target_include_directories(core PUBLIC src)
 
 add_library(ui
-        src/drawer/drawer.cpp
+        src/drawer/drawer.h
 )
 target_link_libraries(ui PRIVATE core Qt::Gui Qt::Widgets)
 

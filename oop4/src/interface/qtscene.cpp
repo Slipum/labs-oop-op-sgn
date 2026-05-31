@@ -1,38 +1,63 @@
 #include "qtscene.h"
+
+#include <algorithm>
+#include <vector>
+
+#include <QLineF>
 #include <QPainter>
+
 void QtSceneDrawer::DrawScene(const Scene& scene)
 {
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setPen(Qt::white);
 
-    QRectF rect = painter.viewport(); // ← важно
+    QRectF rect = painter.viewport();
+    auto viewMatrix = scene.GetCamera().GetViewMatrix();
 
-    float centerX = rect.width() / 2.0f;
-    float centerY = rect.height() / 2.0f;
-
-    float scale = 20.0f;
-    float cameraDistance = 10.0f;
-
-    auto project = [&](const Vertex& v)
-    {
+    auto projectToPlane = [&](const Vertex& v) {
         const auto& p = v.GetPosition();
+        auto cameraPoint = viewMatrix.TransformPoint(p);
 
-        float factor = cameraDistance / (cameraDistance + p.z);
+        if (cameraPoint.z <= 0.1f) {
+            return QPointF();
+        }
 
+        float focal = std::min(rect.width(), rect.height()) * 0.85f;
         return QPointF(
-            p.x * factor * scale + centerX,
-            p.y * factor * scale + centerY
+            rect.width() / 2.0f + cameraPoint.x * focal / cameraPoint.z,
+            rect.height() / 2.0f - cameraPoint.y * focal / cameraPoint.z
         );
     };
 
-    for (const auto& fig : scene.GetFigures())
-    {
-        for (const auto& edge : fig.GetEdges())
-        {
-            auto a = project(*edge.GetBegin());
-            auto b = project(*edge.GetEnd());
+    std::vector<QLineF> projectedEdges;
 
-            painter.drawLine(a, b);
+    for (const auto& fig : scene.GetFigures()) {
+        for (const auto& edge : fig.GetEdges()) {
+            if (!edge.GetBegin() || !edge.GetEnd()) {
+                continue;
+            }
+
+            auto begin = viewMatrix.TransformPoint(edge.GetBegin()->GetPosition());
+            auto end = viewMatrix.TransformPoint(edge.GetEnd()->GetPosition());
+
+            if (begin.z <= 0.1f || end.z <= 0.1f) {
+                continue;
+            }
+
+            QPointF a = projectToPlane(*edge.GetBegin());
+            QPointF b = projectToPlane(*edge.GetEnd());
+
+            projectedEdges.emplace_back(a, b);
         }
+    }
+
+    if (projectedEdges.empty()) {
+        return;
+    }
+
+    painter.setPen(QPen(QColor(Qt::green), 1.4));
+
+    for (const auto& edge : projectedEdges) {
+        painter.drawLine(edge.p1(), edge.p2());
     }
 }

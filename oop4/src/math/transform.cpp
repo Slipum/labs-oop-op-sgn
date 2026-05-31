@@ -82,28 +82,46 @@ TransformMatrix TransformMatrixBuilder::CreateScaleMatrix(
 TransformMatrix TransformMatrixBuilder::CreateRotationMatrix(
     float x, float y, float z
 ) {
+    return CreateRotationZMatrix(z)
+        * CreateRotationYMatrix(y)
+        * CreateRotationXMatrix(x);
+}
+
+TransformMatrix TransformMatrixBuilder::CreateRotationXMatrix(float angle) {
     TransformMatrix rx;
+
+    float c = cos(angle), s = sin(angle);
+
+    rx._matr[1][1] = c;
+    rx._matr[1][2] = -s;
+    rx._matr[2][1] = s;
+    rx._matr[2][2] = c;
+
+    return rx;
+}
+
+TransformMatrix TransformMatrixBuilder::CreateRotationYMatrix(float angle) {
     TransformMatrix ry;
+
+    float c = cos(angle), s = sin(angle);
+
+    ry._matr[0][0] = c;
+    ry._matr[0][2] = s;
+    ry._matr[2][0] = -s;
+    ry._matr[2][2] = c;
+
+    return ry;
+}
+
+TransformMatrix TransformMatrixBuilder::CreateRotationZMatrix(float angle) {
     TransformMatrix rz;
 
-    float cx = cos(x), sx = sin(x);
-    float cy = cos(y), sy = sin(y);
-    float cz = cos(z), sz = sin(z);
+    float c = cos(angle), s = sin(angle);
 
-    rx._matr[1][1] = cx;
-    rx._matr[1][2] = -sx;
-    rx._matr[2][1] = sx;
-    rx._matr[2][2] = cx;
+    rz._matr[0][0] = c;
+    rz._matr[0][1] = -s;
+    rz._matr[1][0] = s;
+    rz._matr[1][1] = c;
 
-    ry._matr[0][0] = cy;
-    ry._matr[0][2] = sy;
-    ry._matr[2][0] = -sy;
-    ry._matr[2][2] = cy;
-
-    rz._matr[0][0] = cz;
-    rz._matr[0][1] = -sz;
-    rz._matr[1][0] = sz;
-    rz._matr[1][1] = cz;
-
-    return rz * ry * rx;
+    return rz;
 }

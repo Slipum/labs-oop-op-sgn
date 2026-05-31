@@ -12,7 +12,7 @@ class VisualWidget : public QWidget
     qreal t = 0;
     QTimer *timer;
     size_t size = 1;
-    bool _animation;
+    bool& _animation;
     Facade& _facade;
 
 public:

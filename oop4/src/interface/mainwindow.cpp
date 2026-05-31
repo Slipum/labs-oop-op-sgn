@@ -1,49 +1,73 @@
 #include "mainwindow.h"
 
-#include <iostream>
+#include <algorithm>
+#include <cmath>
 
-#include "../../build/Qt_6_9_2_for_macOS-Debug/ui_MainWindow.h"
+#include "ui_mainwindow.h"
 
-#include <QVBoxLayout>
+#include <QApplication>
 #include <QFileDialog>
-#include <QMessageBox>
 #include <QKeyEvent>
-#include <QIntValidator>
+#include <QLineEdit>
+#include <QLocale>
+#include <QMessageBox>
+#include <QMouseEvent>
+#include <QVBoxLayout>
 
 MainWindow::MainWindow(Facade& facade, QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), _facade(facade)
 {
     ui->setupUi(this);
     this->setMinimumSize(MIN_WIDTH, MIN_HEIGHT);
+    this->setFocusPolicy(Qt::StrongFocus);
+    ui->inputRangeLeft->setEnabled(false);
+    ui->inputRangeRight->setEnabled(false);
 
-    ui->filePath->setEnabled(false);
-
-    auto visual = new VisualWidget(_facade, animation);
+    _visual = new VisualWidget(_facade, animation, ui->visual);
     auto layout = new QVBoxLayout(ui->visual);
     layout->setContentsMargins(0,0,0,0);
-    layout->addWidget(visual);
+    layout->addWidget(_visual);
+    _visual->setFocusPolicy(Qt::StrongFocus);
 
     ui->slider->setMinimum(1);
     ui->slider->setMaximum(10);
     ui->slider->setValue(1);
+    ui->filePath->setEnabled(false);
 
-    connect(ui->slider, &QSlider::sliderReleased, this, [this]() {});
+    connect(ui->slider, &QSlider::valueChanged, this, [this]() {
+        updateSlider();
+        reloadScene();
+    });
 
-    ui->inputRangeLeft->setValidator(new QIntValidator(this));
-    ui->inputRangeRight->setValidator(new QIntValidator(this));
+    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::resetPosition);
 
     connect(ui->btnFind, &QPushButton::clicked, this, &MainWindow::findClicked);
     ui->filePath->installEventFilter(this);
+    qApp->installEventFilter(this);
+
     connect(ui->inputRangeRight, &QLineEdit::editingFinished, this, &MainWindow::normalize);
     connect(ui->inputRangeLeft, &QLineEdit::editingFinished, this, &MainWindow::normalize);
 
-    connect(ui->checkBox, &QCheckBox::stateChanged, this, &MainWindow::setAnimation);
+    connect(ui->checkBox, &QCheckBox::toggled, this, &MainWindow::setAnimation);
 
     connect(ui->infoBtn, &QPushButton::clicked, this, &MainWindow::infoClicked);
 
     setupStyles();
 
     ui->filePath->setReadOnly(true);
+    updateSlider();
+}
+
+void MainWindow::resetPosition() {
+    if (ui->filePath->text().isEmpty()) return;
+
+    ui->inputRangeLeft->clear();
+    ui->inputRangeRight->clear();
+    NormalizationParameters params;
+    params.Max = 0;
+    params.Min = 0;
+    readNormalizationParameters(params);
+    reloadScene();
 }
 
 void MainWindow::infoClicked() {
@@ -53,7 +77,7 @@ void MainWindow::infoClicked() {
         tr(
             "Controls:\n\n"
 
-            "Movement:\n"
+            "Object movement relative to camera:\n"
             "W - move forward\n"
             "S - move backward\n"
             "A - move left\n"
@@ -61,10 +85,10 @@ void MainWindow::infoClicked() {
             "Space - move up\n"
             "Shift - move down\n\n"
 
-            "Rotation:\n"
+            "Object rotation:\n"
             "R / F - rotate around X axis\n"
             "X / C - rotate around Y axis\n"
-            "Q / E - rotate around Z axis"
+            "Q / E - rotate around Z axis\n\n"
         )
     );
 }
@@ -75,14 +99,27 @@ void MainWindow::setAnimation() {
 }
 
 void MainWindow::normalize() {
-    if (ui->filePath->text().isEmpty() || ui->filePath->text().isEmpty()) return;
-
+    reloadScene();
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     if (event->type() == QEvent::MouseButtonPress && obj == ui->filePath) {
         findClicked();
+        return true;
     }
+
+    if (event->type() == QEvent::KeyPress && !QApplication::activeModalWidget()) {
+        if (qobject_cast<QLineEdit*>(QApplication::focusWidget())) {
+            return QMainWindow::eventFilter(obj, event);
+        }
+
+        auto* keyEvent = static_cast<QKeyEvent*>(event);
+        if (applyControlKey(keyEvent->key())) {
+            return true;
+        }
+    }
+
+    return QMainWindow::eventFilter(obj, event);
 }
 
 void MainWindow::mousePressEvent(QMouseEvent* event) {
@@ -98,76 +135,144 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::updateSlider(VisualWidget *visual)
+void MainWindow::updateSlider()
 {
     ui->labelStep->setText("Step: " + QString::number(ui->slider->value()));
-
 }
 
-void MainWindow::findClicked()
-{
+void MainWindow::findClicked() {
     QString path = QFileDialog::getOpenFileName(this, tr("Open File"),"/Users/slipum/project/Qt-projects/labs/oop4",tr("CSV files (*.csv)"));
 
-    if (path.isEmpty())
+
+    _currentFilePath = path;
+    reloadScene();
+    ui->filePath->setText(path);
+    ui->inputRangeLeft->clear();
+    ui->inputRangeRight->clear();
+
+    ui->inputRangeLeft->setEnabled(true);
+    ui->inputRangeRight->setEnabled(true);
+    _visual->setFocus();
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event) {
+    if (!applyControlKey(event->key())) {
+        QMainWindow::keyPressEvent(event);
+    }
+}
+
+bool MainWindow::applyControlKey(int key) {
+    constexpr float rotStep = 10.0f * M_PI / 180.0f;
+    constexpr float scaleUp = 1.1f;
+    constexpr float scaleDown = 1.0f / scaleUp;
+    // float moveStep = std::max(1, ui->slider->value());
+    float moveStep = 10.0f;
+    FacadeOperationResult result(true);
+
+    switch (key) {
+    case Qt::Key_W:
+        result = _facade.MoveSceneRelative(0, moveStep);
+        break;
+    case Qt::Key_S:
+        result = _facade.MoveSceneRelative(0, -moveStep);
+        break;
+    case Qt::Key_A:
+        result = _facade.MoveSceneRelative(-moveStep, 0);
+        break;
+    case Qt::Key_D:
+        result = _facade.MoveSceneRelative(moveStep, 0);
+        break;
+    case Qt::Key_Space:
+        result = _facade.MoveSceneLocal(0, moveStep, 0);
+        break;
+    case Qt::Key_Shift:
+        result = _facade.MoveSceneLocal(0, -moveStep, 0);
+        break;
+    case Qt::Key_R:
+        result = _facade.RotateScene(rotStep, 0, 0);
+        break;
+    case Qt::Key_F:
+        result = _facade.RotateScene(-rotStep, 0, 0);
+        break;
+    case Qt::Key_Q:
+        result = _facade.RotateScene(0, -rotStep, 0);
+        break;
+    case Qt::Key_E:
+        result = _facade.RotateScene(0, rotStep, 0);
+        break;
+    case Qt::Key_X:
+        result = _facade.RotateScene(0, 0, rotStep);
+        break;
+    case Qt::Key_C:
+        result = _facade.RotateScene(0, 0, -rotStep);
+        break;
+    default:
+        return false;
+    }
+
+    if (!result.IsSuccess()) {
+        QMessageBox::critical(this, "Error", result.GetErrorMessage().c_str());
+    }
+
+    updateVisualization();
+    return true;
+}
+
+void MainWindow::readNormalizationParameters(NormalizationParameters& params)
+{
+    QString leftText = ui->inputRangeLeft->text().trimmed();
+    QString rightText = ui->inputRangeRight->text().trimmed();
+
+    if (leftText.isEmpty() && rightText.isEmpty()) {
+        params.Min = 0.0f;
+        params.Max = 0.0f;
+        params.EnableNormalization = false;
         return;
+    }
 
-    NormalizationParameters params{};
+    bool leftOk = true;
+    bool rightOk = true;
 
-    auto result = _facade.LoadScene(path.toStdString(), params);
+    int leftValue = 0;
+    int rightValue = 0;
+
+    if (!leftText.isEmpty()) {
+        leftValue = leftText.toInt(&leftOk);
+    }
+
+    if (!rightText.isEmpty()) {
+        rightValue = rightText.toInt(&rightOk);
+    }
+
+    if (!leftOk || !rightOk) {
+        QMessageBox::warning(this, "Ошибка",
+                             "Введите только числовые значения.");
+        return;
+    }
+
+    params.Min = static_cast<float>(leftValue);
+    params.Max = static_cast<float>(rightValue);
+    params.EnableNormalization = true;
+}
+
+void MainWindow::reloadScene() {
+    NormalizationParameters params;
+    readNormalizationParameters(params);
+
+    auto result = _facade.LoadScene(_currentFilePath.toStdString(), params);
 
     if (!result.IsSuccess()) {
         QMessageBox::critical(this, "Error", result.GetErrorMessage().c_str());
         return;
     }
 
-    ui->filePath->setText(path);
-    ui->visual->update();
+    updateVisualization();
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *event) {
-    constexpr float moveStep = 5.0f;
-    constexpr float rotStep = 0.1f;
-
-    switch (event->key()) {
-    case Qt::Key_W:
-        _facade.MoveScene(0, 0, -moveStep);
-        break;
-    case Qt::Key_S:
-        _facade.MoveScene(0, 0, moveStep);
-        break;
-    case Qt::Key_A:
-        _facade.MoveScene(-moveStep, 0, 0);
-        break;
-    case Qt::Key_D:
-        _facade.MoveScene(moveStep, 0, 0);
-        break;
-    case Qt::Key_Space:
-        _facade.MoveScene(0, moveStep, 0);
-        break;
-    case Qt::Key_Shift:
-        _facade.MoveScene(0, -moveStep, 0);
-        break;
-    case Qt::Key_R:
-        _facade.RotateScene(rotStep, 0, 0);
-        break;
-    case Qt::Key_F:
-        _facade.RotateScene(-rotStep, 0, 0);
-        break;
-    case Qt::Key_Q:
-        _facade.RotateScene(0, rotStep, 0);
-        break;
-    case Qt::Key_E:
-        _facade.RotateScene(0, -rotStep, 0);
-        break;
-    case Qt::Key_X:
-        _facade.RotateScene(0, 0, rotStep);
-        break;
-    case Qt::Key_C:
-        _facade.RotateScene(0, 0, -rotStep);
-        break;
+void MainWindow::updateVisualization() {
+    if (_visual) {
+        _visual->update();
     }
-
-    update();
 }
 
 void MainWindow::setupStyles() {
