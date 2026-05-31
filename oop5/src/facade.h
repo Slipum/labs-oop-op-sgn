@@ -1,46 +1,35 @@
-#ifndef OOP5_FACADE_H
-#define OOP5_FACADE_H
-#include <queue>
-#include <thread>
+#ifndef OOP5_QT_FACADE_H
+#define OOP5_QT_FACADE_H
 
-#include "abstructs/builder/builder.h"
+#include <memory>
 
-class IFacade {
+#include "entrypoint/entrypoint.h"
+#include "abstructs/elevator/elevator.h"
+#include "manager/manager.h"
+
+class ElevatorFacade {
 public:
+    ElevatorFacade();
+    explicit ElevatorFacade(std::unique_ptr<ElevatorManager> manager);
 
-    virtual void AcceptFromFloor(int floor) = 0; // - принимать вызовы с этажей;
-    virtual void AcceptFromCabin(int floor) = 0; // - принимать команды из кабины;
-    virtual void ToFloor(int floor) = 0; // - перемещаться между этажами;
+    void setTimerHost(ElevatorTimerHost host);
+    void setStateChangedCallback(ElevatorManager::StateChangedCallback callback);
 
-    // virtual void SetState() = 0; // - открывать и закрывать двери; TODO: вшито в ToFloor
+    void callFromFloor(int floor);
+    void callFromCabin(int floor);
 
-    // virtual bool IsUpMove() = 0; // - определять направление движения; TODO: пока нет смысла
+    void onMoveTimerElapsed();
+    void onWaitTimerElapsed();
+    void onDoorOpenTimerElapsed();
+    void onDoorCloseTimerElapsed();
 
-    // 1. обрабатывать несколько заявок; TODO: нужно хранить очередь
+    ElevatorManager &manager();
+    const ElevatorManager &manager() const;
+    Elevator &elevator();
+    const Elevator &elevator() const;
 
-    // -----------------------------------------------------------
-    // 2. останавливаться на промежуточных
-    // этажах при наличии вызова по пути следования.
-    // TODO: делать проверку на каждом этаже нужно ли остановиться
-    // -----------------------------------------------------------
+private:
+    std::unique_ptr<ElevatorManager> _manager;
 };
 
-class ElevatorFacade : public IFacade {
-private:
-    void ToFloor(int floor) override;
-    void ProcessRequests();
-
-public:
-    ElevatorFacade(int floor);
-    ~ElevatorFacade();
-
-    void AcceptFromCabin(int floor) override;
-    void AcceptFromFloor(int floor) override;
-private:
-    IElevator* _elevator;
-    std::vector<int> _floors;
-
-    std::thread _thread;
-};
-
-#endif //OOP5_FACADE_H
+#endif // OOP5_QT_FACADE_H

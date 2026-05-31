@@ -1,30 +1,42 @@
-#ifndef OOP5_CABIN_H
-#define OOP5_CABIN_H
+#ifndef OOP5_LOGIC_CABIN_H
+#define OOP5_LOGIC_CABIN_H
 
-enum State {
-    WAIT,
+#include <string>
 
-    MOVING,
-    STOPPING,
-    STARTING,
-    BLOCKED,
-    UNBLOCKED
-};
+#include "entrypoint/entrypoint.h"
 
 class ICabin {
 public:
-    virtual State getState() = 0;
-    virtual void setState(State state) = 0;
+    virtual ~ICabin() = default;
+
+    virtual CabinState state() const = 0;
+    virtual const std::string &stateName() const = 0;
+
+    virtual void prepareToMove() = 0;
+    virtual void startMoving() = 0;
+    virtual void stop() = 0;
+    virtual void block() = 0;
+    virtual void unblock() = 0;
 };
 
 class ElevatorCabin : public ICabin {
 public:
-    ElevatorCabin(State state = State::WAIT) : _state(state) {};
+    ElevatorCabin();
 
-    State getState() override { return _state; }
-    void setState(State state) override { _state = state; }
+    CabinState state() const override { return _state; }
+    const std::string &stateName() const override { return _stateName; }
+
+    void prepareToMove() override;
+    void startMoving() override;
+    void stop() override;
+    void block() override;
+    void unblock() override;
+
 private:
-    State _state;
+    void setState(CabinState state);
+
+    CabinState _state = CabinState::Stopped;
+    std::string _stateName;
 };
 
-#endif //OOP5_CABIN_H
+#endif // OOP5_LOGIC_CABIN_H

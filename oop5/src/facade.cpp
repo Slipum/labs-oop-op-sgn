@@ -1,41 +1,55 @@
 #include "facade.h"
 
-#include <exception>
-#include <iostream>
+#include "abstructs/builder/builder.h"
 
-ElevatorFacade::ElevatorFacade(int floor) {
-    ElevatorBuilder builder;
-    _elevator = builder.createElevator(floor);
+ElevatorFacade::ElevatorFacade() : _manager(ElevatorBuilder().withDefaults().buildManager()) {}
 
-    _thread = std::thread(&ElevatorFacade::ProcessRequests, this);
+ElevatorFacade::ElevatorFacade(std::unique_ptr<ElevatorManager> manager) : _manager(std::move(manager)) {}
+
+void ElevatorFacade::setTimerHost(ElevatorTimerHost host) {
+    _manager->setTimerHost(std::move(host));
 }
 
-void ElevatorFacade::AcceptFromFloor(int floor) {  }
-
-void ElevatorFacade::ToFloor(int floor) {
-    try {
-        _elevator->setFloor(floor);
-        _elevator->getDoor()->open();
-        _elevator->getDoor()->close();
-    } catch (std::exception& e) {
-        std::cout << e.what() << std::endl;
-    }
+void ElevatorFacade::setStateChangedCallback(ElevatorManager::StateChangedCallback callback) {
+    _manager->setStateChangedCallback(std::move(callback));
 }
 
-void ElevatorFacade::AcceptFromCabin(int floor) {
-    _floors.push_back(floor);
+void ElevatorFacade::callFromFloor(int floor) {
+    _manager->callFromFloor(floor);
 }
 
-void ElevatorFacade::ProcessRequests() {
-    while (!_floors.empty()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        ToFloor(_floors.back());
-        _floors.pop_back();
-    }
+void ElevatorFacade::callFromCabin(int floor) {
+    _manager->callFromCabin(floor);
 }
 
-ElevatorFacade::~ElevatorFacade() {
-    if (_thread.joinable()) {
-        _thread.join();
-    }
+void ElevatorFacade::onMoveTimerElapsed() {
+    _manager->onMoveTimerElapsed();
+}
+
+void ElevatorFacade::onWaitTimerElapsed() {
+    _manager->onWaitTimerElapsed();
+}
+
+void ElevatorFacade::onDoorOpenTimerElapsed() {
+    _manager->onDoorOpenTimerElapsed();
+}
+
+void ElevatorFacade::onDoorCloseTimerElapsed() {
+    _manager->onDoorCloseTimerElapsed();
+}
+
+ElevatorManager &ElevatorFacade::manager() {
+    return *_manager;
+}
+
+const ElevatorManager &ElevatorFacade::manager() const {
+    return *_manager;
+}
+
+Elevator &ElevatorFacade::elevator() {
+    return _manager->elevator();
+}
+
+const Elevator &ElevatorFacade::elevator() const {
+    return _manager->elevator();
 }
