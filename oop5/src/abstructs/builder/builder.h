@@ -7,19 +7,11 @@
 #include "abstructs/controller/controller.h"
 #include "abstructs/door/door.h"
 #include "abstructs/elevator/elevator.h"
-#include "manager/manager.h"
 
 class ElevatorBuilder {
 public:
-    ElevatorBuilder();
-
-    ElevatorBuilder &withCabin(std::unique_ptr<ICabin> cabin);
-    ElevatorBuilder &withController(std::unique_ptr<IController> controller);
-    ElevatorBuilder &withDoor(std::unique_ptr<IDoor> door);
-    ElevatorBuilder &withDefaults(int startFloor = 1);
-
-    std::unique_ptr<Elevator> build();
-    std::unique_ptr<ElevatorManager> buildManager();
+    ElevatorBuilder() = default;
+    std::unique_ptr<Elevator> build(int startFloor = 1);
 
 private:
     std::unique_ptr<ICabin> _cabin;

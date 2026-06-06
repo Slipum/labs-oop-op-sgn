@@ -4,37 +4,26 @@
 
 #include "entrypoint/entrypoint.h"
 
-namespace {
-const char *controllerStateToString(ControllerState state) {
-    switch (state) {
-    case ControllerState::Free:
-        return "свободен";
-    case ControllerState::Moving:
-        return "движение";
-    case ControllerState::UpdatingTarget:
-        return "обновление цели";
-    case ControllerState::ReachingTarget:
-        return "достижение целевого этажа";
-    }
-    return "неизвестно";
-}
-
-const char *directionToString(MoveDirection direction) {
-    switch (direction) {
-    case MoveDirection::Idle:
-        return "простой";
-    case MoveDirection::Up:
-        return "вверх";
-    case MoveDirection::Down:
-        return "вниз";
-    }
-    return "неизвестно";
-}
-} // namespace
+// const char *controllerStateToString(ControllerState state) {
+//     switch (state) {
+//         case ControllerState::Free: return "свободен";
+//         case ControllerState::Moving: return "движение";
+//         case ControllerState::UpdatingTarget: return "обновление цели";
+//         case ControllerState::ReachingTarget: return "достижение нужного этажа";
+//     }
+// }
+//
+// const char *directionToString(MoveDirection direction) {
+//     switch (direction) {
+//         case MoveDirection::Idle: return "простой";
+//         case MoveDirection::Up: return "вверх";
+//         case MoveDirection::Down: return "вниз";
+//     }
+// }
 
 ElevatorController::ElevatorController(int startFloor)
     : _currentFloor(startFloor), _targetFloor(startFloor) {
-    std::cout << "[Контроллер] Инициализация на этаже " << _currentFloor << std::endl;
+    // std::cout << "[Контроллер] Старт с этажа " << _currentFloor << std::endl;
 }
 
 bool ElevatorController::hasPendingFloor(int floor) const {
@@ -54,8 +43,8 @@ void ElevatorController::setState(ControllerState state) {
         return;
     }
     _controllerState = state;
-    _controllerStateName = controllerStateToString(state);
-    std::cout << "[Контроллер] Состояние: " << _controllerStateName << std::endl;
+    // _controllerStateName = controllerStateToString(state);
+    // std::cout << "[Контроллер] Состояние: " << _controllerStateName << std::endl;
 }
 
 void ElevatorController::setDirection(MoveDirection direction) {
@@ -63,8 +52,8 @@ void ElevatorController::setDirection(MoveDirection direction) {
         return;
     }
     _direction = direction;
-    _directionName = directionToString(direction);
-    std::cout << "[Контроллер] Направление: " << _directionName << std::endl;
+    // _directionName = directionToString(direction);
+    // std::cout << "[Контроллер] Направление: " << _directionName << std::endl;
 }
 
 void ElevatorController::stepUp() {

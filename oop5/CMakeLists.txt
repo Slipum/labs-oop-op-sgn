@@ -43,6 +43,7 @@ add_library(logic
         src/manager/manager.h
         src/abstructs/builder/builder.cpp
         src/abstructs/builder/builder.h
+        src/manager/logger.h
 )
 
 target_include_directories(logic PUBLIC src)

@@ -1,7 +1,6 @@
 #ifndef OOP5_LOGIC_CONTROLLER_H
 #define OOP5_LOGIC_CONTROLLER_H
 
-#include <string>
 #include <unordered_set>
 
 #include "entrypoint/entrypoint.h"
@@ -16,8 +15,8 @@ public:
 
     virtual ControllerState state() const = 0;
     virtual MoveDirection direction() const = 0;
-    virtual const std::string &stateName() const = 0;
-    virtual const std::string &directionName() const = 0;
+    // virtual const std::string &stateName() const = 0;
+    // virtual const std::string &directionName() const = 0;
 
     virtual const std::unordered_set<int> &pendingFloors() const = 0;
     virtual bool hasPendingFloor(int floor) const = 0;
@@ -42,8 +41,8 @@ public:
 
     ControllerState state() const override { return _controllerState; }
     MoveDirection direction() const override { return _direction; }
-    const std::string &stateName() const override { return _controllerStateName; }
-    const std::string &directionName() const override { return _directionName; }
+    // const std::string &stateName() const override { return _controllerStateName; }
+    // const std::string &directionName() const override { return _directionName; }
 
     const std::unordered_set<int> &pendingFloors() const override { return _pendingFloors; }
     bool hasPendingFloor(int floor) const override;
@@ -65,8 +64,8 @@ private:
     ControllerState _controllerState = ControllerState::Free;
     MoveDirection _direction = MoveDirection::Idle;
 
-    std::string _controllerStateName = "свободен";
-    std::string _directionName = "простой";
+    // std::string _controllerStateName = "свободен";
+    // std::string _directionName = "простой";
 };
 
 #endif // OOP5_LOGIC_CONTROLLER_H

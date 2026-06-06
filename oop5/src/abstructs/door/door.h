@@ -10,7 +10,7 @@ public:
     virtual ~IDoor() = default;
 
     virtual DoorState state() const = 0;
-    virtual const std::string &stateName() const = 0;
+    // virtual const std::string &stateName() const = 0;
 
     virtual void open() = 0;
     virtual void close() = 0;
@@ -21,7 +21,7 @@ public:
 class ElevatorDoor : public IDoor {
 public:
     DoorState state() const override { return _state; }
-    const std::string &stateName() const override { return _stateName; }
+    // const std::string &stateName() const override { return _stateName; }
 
     void open() override;
     void close() override;
@@ -32,7 +32,7 @@ private:
     void setState(DoorState state);
 
     DoorState _state = DoorState::Closed;
-    std::string _stateName = "закрыты";
+    // std::string _stateName = "закрыты";
 };
 
 #endif // OOP5_LOGIC_DOOR_H

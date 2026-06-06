@@ -12,14 +12,9 @@ public:
     Elevator(std::unique_ptr<ICabin> cabin, std::unique_ptr<IController> controller,
              std::unique_ptr<IDoor> door);
 
-    ICabin &cabin();
-    IController &controller();
-    IDoor &door();
-
-    const ICabin &cabin() const;
-    const IController &controller() const;
-    const IDoor &door() const;
-
+    ICabin &cabin() { return *_cabin; }
+    IController &controller() { return *_controller; }
+    IDoor &door() { return *_door; }
 private:
     std::unique_ptr<ICabin> _cabin;
     std::unique_ptr<IController> _controller;

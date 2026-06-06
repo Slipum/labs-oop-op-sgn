@@ -2,7 +2,7 @@
 
 #include "abstructs/builder/builder.h"
 
-ElevatorFacade::ElevatorFacade() : _manager(ElevatorBuilder().withDefaults().buildManager()) {}
+ElevatorFacade::ElevatorFacade() : _manager(std::make_unique<ElevatorManager>(ElevatorBuilder().build())) {}
 
 ElevatorFacade::ElevatorFacade(std::unique_ptr<ElevatorManager> manager) : _manager(std::move(manager)) {}
 
@@ -22,34 +22,26 @@ void ElevatorFacade::callFromCabin(int floor) {
     _manager->callFromCabin(floor);
 }
 
-void ElevatorFacade::onMoveTimerElapsed() {
-    _manager->onMoveTimerElapsed();
+void ElevatorFacade::onMove() {
+    _manager->onMove();
 }
 
-void ElevatorFacade::onWaitTimerElapsed() {
-    _manager->onWaitTimerElapsed();
+void ElevatorFacade::onWait() {
+    _manager->onWait();
 }
 
-void ElevatorFacade::onDoorOpenTimerElapsed() {
-    _manager->onDoorOpenTimerElapsed();
+void ElevatorFacade::onDoorOpen() {
+    _manager->onDoorOpen();
 }
 
-void ElevatorFacade::onDoorCloseTimerElapsed() {
-    _manager->onDoorCloseTimerElapsed();
+void ElevatorFacade::onDoorClose() {
+    _manager->onDoorClose();
 }
 
 ElevatorManager &ElevatorFacade::manager() {
     return *_manager;
 }
 
-const ElevatorManager &ElevatorFacade::manager() const {
-    return *_manager;
-}
-
 Elevator &ElevatorFacade::elevator() {
-    return _manager->elevator();
-}
-
-const Elevator &ElevatorFacade::elevator() const {
     return _manager->elevator();
 }

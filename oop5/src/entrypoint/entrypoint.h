@@ -12,7 +12,6 @@ enum class ControllerState { Free, Moving, UpdatingTarget, ReachingTarget };
 enum class MoveDirection { Idle, Up, Down };
 
 
-
 struct ElevatorTimerHost {
     std::function<void(int ms)> startMoveTimer;
     std::function<void()> stopMoveTimer;
@@ -26,9 +25,9 @@ enum ElevatorConfig {
     MIN_FLOOR = 1,
 
     WAIT_MS = 1000,
-    DOOR_OPEN_MS = 1500,
-    DOOR_CLOSE_MS = 1500,
-    FLOOR_WAIT_MS = 2500,
+    DOOR_OPEN_MS = 700,
+    DOOR_CLOSE_MS = 700,
+    FLOOR_WAIT_MS = 2000,
 };
 
 #endif // OOP5_LOGIC_ELEVATOR_TIMER_HOST_H

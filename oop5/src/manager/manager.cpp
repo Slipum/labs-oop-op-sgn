@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <climits>
 #include <iostream>
+#include <sstream>
 
+#include "logger.h"
 #include "entrypoint/entrypoint.h"
 
 ElevatorManager::ElevatorManager(std::unique_ptr<Elevator> elevator) : _elevator(std::move(elevator)) {}
@@ -32,7 +34,7 @@ void ElevatorManager::notifyStateChanged() {
 
 void ElevatorManager::callFromFloor(int floor) {
     if (!_elevator->controller().isValidFloor(floor)) {
-        std::cerr << "[Менеджер] Некорректный вызов с этажа: " << floor << std::endl;
+        Logger::instance().error((std::ostringstream() << "Некорректный вызов с этажа: " << floor).str());
         return;
     }
     enqueueFloor(floor, "этаж");
@@ -40,7 +42,7 @@ void ElevatorManager::callFromFloor(int floor) {
 
 void ElevatorManager::callFromCabin(int floor) {
     if (!_elevator->controller().isValidFloor(floor)) {
-        std::cerr << "[Менеджер] Некорректная команда из кабины: " << floor << std::endl;
+        Logger::instance().error((std::ostringstream() << "Некорректная команда из кабины: " << floor).str());
         return;
     }
     enqueueFloor(floor, "кабина");
@@ -48,7 +50,7 @@ void ElevatorManager::callFromCabin(int floor) {
 
 void ElevatorManager::enqueueFloor(int floor, const char *source) {
     auto &ctrl = _elevator->controller();
-    std::cout << "[Менеджер] Вызов лифта (" << source << ") на этаж " << floor << std::endl;
+    Logger::instance().log((std::ostringstream() << "Вызов лифта (" << source << ") на этаж " << floor).str());
 
     if (!ctrl.hasPendingFloor(floor)) {
         ctrl.addPendingFloor(floor);
@@ -67,8 +69,7 @@ void ElevatorManager::enqueueFloor(int floor, const char *source) {
 
     if (ctrl.state() == ControllerState::Moving) {
         pickNextTarget();
-        std::cout << "[Менеджер] Новая цель: этаж " << ctrl.targetFloor() << ", направление: "
-                  << ctrl.directionName() << std::endl;
+        Logger::instance().log((std::ostringstream() << "Новая цель: этаж " << ctrl.targetFloor()).str());
         notifyStateChanged();
         if (_timers.startMoveTimer) {
             continueMoving();
@@ -118,9 +119,9 @@ void ElevatorManager::pickNextTarget() {
         }
         ctrl.setTargetFloor(bestFloor);
         ctrl.setDirection(ctrl.targetFloor() > ctrl.currentFloor()
-                              ? MoveDirection::Up
-                              : ctrl.targetFloor() < ctrl.currentFloor() ? MoveDirection::Down
-                                                                         : MoveDirection::Idle);
+            ? MoveDirection::Up
+            : ctrl.targetFloor() < ctrl.currentFloor() ? MoveDirection::Down
+            : MoveDirection::Idle);
         return;
     }
 
@@ -162,7 +163,7 @@ void ElevatorManager::startMoving() {
     }
 
     if (_elevator->door().state() != DoorState::Closed) {
-        std::cerr << "[Менеджер] Движение отложено: двери не закрыты" << std::endl;
+        Logger::instance().error("Движение отложено: двери не закрыты");
         return;
     }
 
@@ -174,8 +175,7 @@ void ElevatorManager::startMoving() {
     _elevator->cabin().prepareToMove();
 
     ctrl.setState(ControllerState::Moving);
-    std::cout << "[Менеджер] Начало движения к этажу " << ctrl.targetFloor() << " ("
-              << ctrl.directionName() << ")" << std::endl;
+    Logger::instance().log((std::ostringstream() << "Начало движения к этажу " << ctrl.targetFloor()).str());
     notifyStateChanged();
 
     _elevator->cabin().startMoving();
@@ -191,11 +191,10 @@ void ElevatorManager::continueMoving() {
     _timers.startMoveTimer(ElevatorConfig::WAIT_MS);
 }
 
-void ElevatorManager::onMoveTimerElapsed() {
+void ElevatorManager::onMove() {
     auto &ctrl = _elevator->controller();
     if (ctrl.state() != ControllerState::Moving) {
-        std::cerr << "[Менеджер] Таймер движения проигнорирован, состояние: " << ctrl.stateName()
-                  << std::endl;
+        Logger::instance().error("Таймер движения проигнорирован");
         return;
     }
 
@@ -205,7 +204,7 @@ void ElevatorManager::onMoveTimerElapsed() {
         ctrl.stepDown();
     }
 
-    std::cout << "[Менеджер] Текущий этаж: " << ctrl.currentFloor() << std::endl;
+    Logger::instance().log((std::ostringstream() << "Текущий этаж: " << ctrl.currentFloor()).str());
     notifyStateChanged();
 
     if (ctrl.hasPendingFloor(ctrl.currentFloor())) {
@@ -216,7 +215,7 @@ void ElevatorManager::onMoveTimerElapsed() {
     if (ctrl.currentFloor() == ctrl.targetFloor()) {
         pickNextTarget();
         if (ctrl.targetFloor() != ctrl.currentFloor()) {
-            std::cout << "[Менеджер] Промежуточная смена цели: этаж " << ctrl.targetFloor() << std::endl;
+            Logger::instance().log((std::ostringstream() << "Промежуточная смена цели: этаж " << ctrl.targetFloor()).str());
             notifyStateChanged();
         }
     }
@@ -229,7 +228,7 @@ void ElevatorManager::onMoveTimerElapsed() {
     if (!ctrl.pendingFloors().empty()) {
         pickNextTarget();
         if (ctrl.currentFloor() != ctrl.targetFloor()) {
-            std::cout << "[Менеджер] Смена цели без остановки: этаж " << ctrl.targetFloor() << std::endl;
+            Logger::instance().log((std::ostringstream() << "Смена цели без остановки: этаж " << ctrl.targetFloor()).str());
             notifyStateChanged();
             continueMoving();
             return;
@@ -250,7 +249,7 @@ void ElevatorManager::arriveAtFloor() {
     ctrl.setState(ControllerState::ReachingTarget);
     _elevator->cabin().stop();
 
-    std::cout << "[Менеджер] Прибытие на этаж " << ctrl.currentFloor() << std::endl;
+    Logger::instance().log((std::ostringstream() << "Прибытие на этаж " << ctrl.currentFloor()).str());
     notifyStateChanged();
 
     beginDoorCycle();
@@ -264,21 +263,21 @@ void ElevatorManager::beginDoorCycle() {
     }
 }
 
-void ElevatorManager::onDoorOpenTimerElapsed() {
+void ElevatorManager::onDoorOpen() {
     _elevator->door().completeOpen();
     if (_timers.startWaitTimer) {
         _timers.startWaitTimer(ElevatorConfig::FLOOR_WAIT_MS);
     }
 }
 
-void ElevatorManager::onWaitTimerElapsed() {
+void ElevatorManager::onWait() {
     _elevator->door().close();
     if (_timers.startDoorCloseTimer) {
         _timers.startDoorCloseTimer(ElevatorConfig::DOOR_CLOSE_MS);
     }
 }
 
-void ElevatorManager::onDoorCloseTimerElapsed() {
+void ElevatorManager::onDoorClose() {
     _elevator->door().completeClose();
     finishStopAtFloor();
 }
@@ -291,14 +290,14 @@ void ElevatorManager::finishStopAtFloor() {
 
     if (ctrl.pendingFloors().empty()) {
         ctrl.setDirection(MoveDirection::Idle);
-        std::cout << "[Менеджер] Очередь заявок пуста" << std::endl;
+        Logger::instance().log("Очередь заявок пуста");
         notifyStateChanged();
         return;
     }
 
     pickNextTarget();
-    std::cout << "[Менеджер] Следующая цель: этаж " << ctrl.targetFloor() << " ("
-              << ctrl.directionName() << ")" << std::endl;
+
+    Logger::instance().log((std::ostringstream() << "Следующая цель: этаж " << ctrl.targetFloor()).str());
     notifyStateChanged();
 
     schedule();

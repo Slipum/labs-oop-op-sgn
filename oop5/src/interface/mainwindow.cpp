@@ -85,7 +85,7 @@ void MainWindow::setupStyle() {
         border-radius: 6px;
         padding: 4px;
     }
-    QLabel#carIndicator {
+    QLabel#labelIndicator {
         background-color: #4a9eff;
         color: #ffffff;
         border-radius: 8px;
@@ -158,17 +158,13 @@ void MainWindow::refreshUi() {
 
     ui->labelCurrentFloor->setText(QStringLiteral("Текущий этаж: %1").arg(floor));
     ui->labelTarget->setText(QStringLiteral("Целевой этаж: %1").arg(ctrl.targetFloor()));
-    ui->labelDirection->setText(
-        QStringLiteral("Направление: %1").arg(ElevatorTexts::direction(ctrl.direction())));
-    ui->labelController->setText(
-        QStringLiteral("Контроллер: %1").arg(ElevatorTexts::controllerState(ctrl.state())));
-    ui->labelCabin->setText(
-        QStringLiteral("Кабина: %1").arg(ElevatorTexts::cabinState(_facade.elevator().cabin().state())));
-    ui->labelDoor->setText(
-        QStringLiteral("Двери: %1").arg(ElevatorTexts::doorState(_facade.elevator().door().state())));
-    ui->labelPending->setText(
-        QStringLiteral("Очередь: %1").arg(ElevatorTexts::pendingFloors(ctrl.pendingFloors())));
-    ui->carIndicator->setText(QStringLiteral("Кабина: %1").arg(floor));
+    ui->labelDirection->setText(QStringLiteral("Направление: %1").arg(direction(ctrl.direction())));
+    ui->labelController->setText(QStringLiteral("Контроллер: %1").arg(controllerState(ctrl.state())));
+    ui->labelCabin->setText(QStringLiteral("Кабина: %1").arg(cabinState(_facade.elevator().cabin().state())));
+    ui->labelDoor->setText(QStringLiteral("Двери: %1").arg(doorState(_facade.elevator().door().state())));
+    ui->labelPending->setText(QStringLiteral("Очередь: %1").arg(pendingFloors(ctrl.pendingFloors())));
+
+    ui->labelIndicator->setText(QStringLiteral("Кабина: %1").arg(floor));
     highlightShaftFloor(floor);
 }
 
@@ -176,9 +172,8 @@ void MainWindow::highlightShaftFloor(int floor) {
     for (int f = ElevatorConfig::MIN_FLOOR; f <= ElevatorConfig::FLOOR_COUNT; ++f) {
         const bool active = (f == floor);
         _rowFloors[f]->setProperty("rowRole", active ? "floorActive" : "floor");
-        _rowFloors[f]->setStyleSheet(active ? QStringLiteral("background-color: #1e4d7b; border: 1px solid #4a9eff; "
-                                                               "border-radius: 6px;")
-                                             : QStringLiteral("background-color: #2e3440; border-radius: 6px;"));
+        _rowFloors[f]->setStyleSheet(active ? QStringLiteral("background-color: #1e4d7b; border: 1px solid #4a9eff; border-radius: 6px;")
+            : QStringLiteral("background-color: #2e3440; border-radius: 6px;"));
         _floorLamps[f]->setStyleSheet(active ?
             "background-color: #4a9eff; border-radius: 6px;"
             : "background-color: #4a5568; border-radius: 6px;");
@@ -197,7 +192,7 @@ void MainWindow::onCabinFloor3() { _facade.callFromCabin(3); }
 void MainWindow::onCabinFloor4() { _facade.callFromCabin(4); }
 void MainWindow::onCabinFloor5() { _facade.callFromCabin(5); }
 
-void MainWindow::onMoveTimer() { _facade.onMoveTimerElapsed(); }
-void MainWindow::onWaitTimer() { _facade.onWaitTimerElapsed(); }
-void MainWindow::onDoorOpenTimer() { _facade.onDoorOpenTimerElapsed(); }
-void MainWindow::onDoorCloseTimer() { _facade.onDoorCloseTimerElapsed(); }
+void MainWindow::onMoveTimer() { _facade.onMove(); }
+void MainWindow::onWaitTimer() { _facade.onWait(); }
+void MainWindow::onDoorOpenTimer() { _facade.onDoorOpen(); }
+void MainWindow::onDoorCloseTimer() { _facade.onDoorClose(); }

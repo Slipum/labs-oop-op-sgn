@@ -32,9 +32,9 @@
     </property>
     <item>
      <widget class="QGroupBox" name="shaftGroup">
-      <property name="title">
-       <string>Шахта здания</string>
-      </property>
+<!--      <property name="title">-->
+<!--       <string>Шахта здания</string>-->
+<!--      </property>-->
       <layout class="QVBoxLayout" name="shaftGroupLayout">
        <item>
         <widget class="QFrame" name="shaftFrame">
@@ -230,7 +230,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="carIndicator">
+        <widget class="QLabel" name="labelIndicator">
          <property name="text">
           <string>Кабина: 1</string>
          </property>
@@ -244,9 +244,9 @@
     </item>
     <item>
      <widget class="QGroupBox" name="callsGroup">
-      <property name="title">
-       <string>Вызов с этажа</string>
-      </property>
+<!--      <property name="title">-->
+<!--       <string>Вызов с этажа</string>-->
+<!--      </property>-->
       <layout class="QVBoxLayout" name="callsLayout">
        <item>
         <widget class="QPushButton" name="callFloor5">
@@ -301,9 +301,9 @@
     </item>
     <item>
      <widget class="QGroupBox" name="cabinGroup">
-      <property name="title">
-       <string>Панель кабины</string>
-      </property>
+<!--      <property name="title">-->
+<!--       <string>Панель кабины</string>-->
+<!--      </property>-->
       <layout class="QVBoxLayout" name="cabinLayout">
        <item>
         <widget class="QLabel" name="labelCurrentFloor">

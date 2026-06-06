@@ -18,15 +18,13 @@ public:
     void callFromFloor(int floor);
     void callFromCabin(int floor);
 
-    void onMoveTimerElapsed();
-    void onWaitTimerElapsed();
-    void onDoorOpenTimerElapsed();
-    void onDoorCloseTimerElapsed();
+    void onMove();
+    void onWait();
+    void onDoorOpen();
+    void onDoorClose();
 
     ElevatorManager &manager();
-    const ElevatorManager &manager() const;
     Elevator &elevator();
-    const Elevator &elevator() const;
 
 private:
     std::unique_ptr<ElevatorManager> _manager;

@@ -22,10 +22,10 @@ public:
     void callFromFloor(int floor);
     void callFromCabin(int floor);
 
-    void onMoveTimerElapsed();
-    void onWaitTimerElapsed();
-    void onDoorOpenTimerElapsed();
-    void onDoorCloseTimerElapsed();
+    void onMove();
+    void onWait();
+    void onDoorOpen();
+    void onDoorClose();
 
 private:
     void enqueueFloor(int floor, const char *source);
