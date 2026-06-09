@@ -1,15 +1,22 @@
-#ifndef OOP5_BUILDER_H
-#define OOP5_BUILDER_H
+#ifndef OOP5_LOGIC_BUILDER_H
+#define OOP5_LOGIC_BUILDER_H
+
+#include <memory>
+
+#include "abstructs/cabin/cabin.h"
+#include "abstructs/controller/controller.h"
+#include "abstructs/door/door.h"
 #include "abstructs/elevator/elevator.h"
 
-class IBuilder {
+class ElevatorBuilder {
 public:
-    virtual IElevator* createElevator(int countFloor) = 0;
+    ElevatorBuilder() = default;
+    std::unique_ptr<Elevator> build(int startFloor = 1);
+
+private:
+    std::unique_ptr<ICabin> _cabin;
+    std::unique_ptr<IController> _controller;
+    std::unique_ptr<IDoor> _door;
 };
 
-class ElevatorBuilder : public IBuilder {
-public:
-    IElevator* createElevator(int countFloor) override;
-};
-
-#endif //OOP5_BUILDER_H
+#endif // OOP5_LOGIC_BUILDER_H

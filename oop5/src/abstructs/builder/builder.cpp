@@ -1,9 +1,13 @@
 #include "builder.h"
 
-IElevator* ElevatorBuilder::createElevator(int countFloor) {
-    Elevator* elevator = new Elevator(countFloor);
-    elevator->setCabin(new ElevatorCabin());
-    elevator->setController(new ElevatorController(elevator->getCountFloor(), countFloor));
-    elevator->setDoor(new ElevatorDoor());
-    return elevator;
+#include "abstructs/cabin/cabin.h"
+#include "abstructs/controller/controller.h"
+#include "abstructs/door/door.h"
+#include "manager/manager.h"
+
+std::unique_ptr<Elevator> ElevatorBuilder::build(int startFloor) {
+    _cabin = std::make_unique<ElevatorCabin>();
+    _controller = std::make_unique<ElevatorController>(startFloor);
+    _door = std::make_unique<ElevatorDoor>();
+    return std::make_unique<Elevator>(std::move(_cabin), std::move(_controller), std::move(_door));
 }
