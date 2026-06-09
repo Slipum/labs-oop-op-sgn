@@ -15,7 +15,8 @@ void ElevatorFacade::setStateChangedCallback(ElevatorManager::StateChangedCallba
 }
 
 void ElevatorFacade::callFromFloor(int floor) {
-    _manager->callFromFloor(floor);
+    if (_manager->elevator().controller().pendingFloors().find(floor) == _manager->elevator().controller().pendingFloors().end())
+        _manager->callFromFloor(floor);
 }
 
 void ElevatorFacade::callFromCabin(int floor) {

@@ -1,6 +1,8 @@
 #include "door.h"
 
 #include <iostream>
+
+#include "manager/logger.h"
 //
 // const char *doorStateToString(DoorState state) {
 //     switch (state) {
@@ -31,13 +33,13 @@ void ElevatorDoor::close() {
 void ElevatorDoor::completeOpen() {
     if (_state != DoorState::Opening) return;
     setState(DoorState::Open);
-    // std::cout << "[Двери] Открыты" << std::endl;
+    Logger::instance().log("*Двери* Открыты");
 }
 
 void ElevatorDoor::completeClose() {
     if (_state != DoorState::Closing) return;
     setState(DoorState::Closed);
-    // std::cout << "[Двери] Закрыты" << std::endl;
+    Logger::instance().log("*Двери* Закрыты");
 }
 
 void ElevatorDoor::setState(DoorState state) {
